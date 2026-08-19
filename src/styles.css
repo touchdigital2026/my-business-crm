@@ -1,0 +1,363 @@
+/* ============================================================
+   CRM – Design tokens (ערכת העיצוב המרכזית של המערכת)
+   כל צבע/רדיוס מוגדר כאן פעם אחת, וכל המסכים משתמשים בו.
+   ============================================================ */
+:root {
+  --bg: #08080C;
+  --bg-elevated: #101018;
+  --surface: #13131C;
+  --surface-2: #1A1A25;
+  --border: #262633;
+  --border-strong: #34344a;
+
+  --text: #F3F3F8;
+  --text-muted: #8C8CA1;
+  --text-dim: #5F5F73;
+
+  --accent: #6D5EF6;
+  --accent-hover: #7E70FF;
+  --accent-press: #5B4CE0;
+  --accent-soft: rgba(109, 94, 246, 0.14);
+  --accent-glow: rgba(109, 94, 246, 0.45);
+  --accent-gradient: linear-gradient(135deg, #6D5EF6 0%, #4E7BFF 100%);
+
+  --danger: #FF6B7D;
+  --success: #3ED598;
+
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 22px;
+
+  --shadow-card: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --font: 'Heebo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   מסך ההתחברות
+   ============================================================ */
+.login-screen {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: hidden;
+}
+
+/* הילות אור סגולות-כחלחלות ברקע */
+.login-screen::before,
+.login-screen::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+}
+.login-screen::before {
+  width: 460px; height: 460px;
+  background: rgba(109, 94, 246, 0.20);
+  top: -160px; inset-inline-start: -140px;
+}
+.login-screen::after {
+  width: 420px; height: 420px;
+  background: rgba(78, 123, 255, 0.14);
+  bottom: -180px; inset-inline-end: -120px;
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-elevated) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 40px 34px 32px;
+}
+
+/* --- לוגו וכותרות --- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.brand__mark {
+  width: 44px; height: 44px;
+  border-radius: 13px;
+  background: var(--accent-gradient);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 19px;
+  color: #fff;
+  box-shadow: 0 8px 22px var(--accent-glow);
+}
+.brand__name {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.brand__tag {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.login-title {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.login-subtitle {
+  margin: 0 0 26px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* --- שדות טופס --- */
+.field { margin-bottom: 18px; }
+
+.field__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.field__input {
+  width: 100%;
+  height: 48px;
+  padding: 0 15px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.field__input::placeholder { color: var(--text-dim); }
+.field__input:hover:not(:disabled) { border-color: var(--border-strong); }
+.field__input:focus {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.field__input:disabled { opacity: 0.6; cursor: not-allowed; }
+.field__input--error { border-color: var(--danger); }
+.field__input--error:focus { box-shadow: 0 0 0 4px rgba(255, 107, 125, 0.14); }
+
+/* שדה סיסמה עם כפתור "הצג".
+   השדה עצמו הוא LTR (סיסמאות נכתבות באנגלית) בעוד שהעמוד הוא RTL,
+   ולכן הריווח לכפתור נקבע במפורש בצד שמאל ולא דרך inline-end. */
+.field__wrap { position: relative; }
+.field__wrap .field__input { padding-left: 62px; padding-right: 15px; }
+.field__toggle {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 12.5px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.field__toggle:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+.field__error {
+  display: block;
+  margin-top: 7px;
+  font-size: 12.5px;
+  color: var(--danger);
+}
+
+/* --- שורת "זכור אותי" / "שכחתי סיסמה" --- */
+.login-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 4px 0 24px;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.checkbox input { position: absolute; opacity: 0; width: 0; height: 0; }
+.checkbox__box {
+  width: 18px; height: 18px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+  transition: all 0.16s ease;
+}
+.checkbox__box svg { opacity: 0; transform: scale(0.6); transition: all 0.16s ease; }
+.checkbox input:checked + .checkbox__box {
+  background: var(--accent-gradient);
+  border-color: transparent;
+}
+.checkbox input:checked + .checkbox__box svg { opacity: 1; transform: scale(1); }
+.checkbox input:focus-visible + .checkbox__box { box-shadow: 0 0 0 4px var(--accent-soft); }
+
+.link-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: var(--font);
+  font-size: 13.5px;
+  color: var(--accent);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.link-btn:hover { color: var(--accent-hover); text-decoration: underline; }
+
+/* --- כפתור הפעולה הראשי --- */
+.btn-primary {
+  width: 100%;
+  height: 50px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--accent-gradient);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 15.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 10px 26px -8px var(--accent-glow);
+  transition: transform 0.14s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 14px 32px -8px var(--accent-glow);
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) { transform: translateY(0); filter: brightness(0.96); }
+.btn-primary:disabled { opacity: 0.65; cursor: not-allowed; box-shadow: none; }
+
+.spinner {
+  width: 17px; height: 17px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- הודעת שגיאה כללית --- */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 107, 125, 0.09);
+  border: 1px solid rgba(255, 107, 125, 0.28);
+  color: #FFB3BC;
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  font-size: 13.5px;
+  margin-bottom: 18px;
+}
+
+/* --- תחתית הכרטיס --- */
+.login-hint {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.8;
+  text-align: center;
+}
+.login-hint code {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  direction: ltr;
+  display: inline-block;
+}
+
+/* ============================================================
+   מסך זמני אחרי התחברות מוצלחת (יוחלף בדשבורד בשלב הבא)
+   ============================================================ */
+.welcome {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+}
+.welcome__card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 44px 38px;
+  max-width: 460px;
+  box-shadow: var(--shadow-card);
+}
+.welcome__badge {
+  width: 58px; height: 58px;
+  margin: 0 auto 18px;
+  border-radius: 18px;
+  background: var(--accent-gradient);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 26px var(--accent-glow);
+}
+.welcome h2 { margin: 0 0 10px; font-size: 23px; }
+.welcome p { margin: 0 0 24px; color: var(--text-muted); font-size: 14.5px; line-height: 1.7; }
+.btn-ghost {
+  height: 44px;
+  padding: 0 22px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn-ghost:hover { background: #22222F; border-color: var(--accent); }
+
+@media (max-width: 480px) {
+  .login-card { padding: 32px 22px 26px; }
+  .login-title { font-size: 23px; }
+}
