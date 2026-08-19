@@ -1,23 +1,27 @@
 import {
-  IconDashboard, IconLeads, IconCustomers, IconCampaigns,
-  IconTasks, IconReports, IconSettings, IconLogout, IconClose,
+  IconDashboard, IconLeads, IconCustomers, IconTasks, IconSubcontractors,
+  IconPayments, IconExpenses, IconDocuments, IconUsers, IconReports,
+  IconLogout, IconClose, IconSearch, IconAlert,
 } from './icons.jsx'
+import { tasks } from '../data/mockData.js'
 
-/* פריטי התפריט. כדי להוסיף מסך חדש בעתיד – מוסיפים כאן שורה. */
+/* המודולים לפי סעיף 16.3 באפיון. כדי להוסיף מסך – מוסיפים כאן שורה. */
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'דשבורד', Icon: IconDashboard },
-  { id: 'leads', label: 'לידים', Icon: IconLeads, badge: 12 },
-  { id: 'customers', label: 'לקוחות', Icon: IconCustomers },
-  { id: 'campaigns', label: 'קמפיינים', Icon: IconCampaigns },
-  { id: 'tasks', label: 'משימות', Icon: IconTasks, badge: 3 },
+  { id: 'leads', label: 'לידים', Icon: IconLeads, badge: 38 },
+  { id: 'clients', label: 'לקוחות', Icon: IconCustomers, badge: 24 },
+  { id: 'tasks', label: 'משימות', Icon: IconTasks, badge: 18 },
+  { id: 'subcontractors', label: 'קבלני משנה', Icon: IconSubcontractors },
+  { id: 'payments', label: 'תשלומים', Icon: IconPayments },
+  { id: 'expenses', label: 'הוצאות', Icon: IconExpenses },
+  { id: 'documents', label: 'מסמכים', Icon: IconDocuments },
+  { id: 'users', label: 'משתמשים', Icon: IconUsers },
   { id: 'reports', label: 'דוחות', Icon: IconReports },
-  { id: 'settings', label: 'הגדרות', Icon: IconSettings },
 ]
 
 export default function Sidebar({ active, onNavigate, user, onLogout, open, onClose }) {
   return (
     <>
-      {/* רקע כהה שמופיע מאחורי התפריט במסכי מובייל */}
       <div
         className={`sidebar-backdrop ${open ? 'is-open' : ''}`}
         onClick={onClose}
@@ -38,8 +42,17 @@ export default function Sidebar({ active, onNavigate, user, onLogout, open, onCl
           </button>
         </div>
 
+        {/* חיפוש גלובלי – ממוקם בסרגל הצד לפי סעיף 16.3 */}
+        <div className="sidebar__search">
+          <IconSearch width={17} height={17} />
+          <input
+            type="search"
+            placeholder="חיפוש בכל המערכת..."
+            aria-label="חיפוש גלובלי"
+          />
+        </div>
+
         <nav className="sidebar__nav" aria-label="ניווט ראשי">
-          <p className="sidebar__section">תפריט ראשי</p>
           {NAV_ITEMS.map(({ id, label, Icon, badge }) => (
             <button
               key={id}
@@ -47,12 +60,29 @@ export default function Sidebar({ active, onNavigate, user, onLogout, open, onCl
               onClick={() => onNavigate(id)}
               aria-current={active === id ? 'page' : undefined}
             >
-              <Icon />
+              <span className="nav-item__icon">
+                <Icon width={18} height={18} />
+              </span>
               <span className="nav-item__label">{label}</span>
-              {badge && <span className="nav-item__badge">{badge}</span>}
+              {badge && <span className="nav-item__badge" dir="ltr">{badge}</span>}
             </button>
           ))}
         </nav>
+
+        {/* כרטיס התראה קבוע בתחתית הסרגל – סעיף 16.3 */}
+        {tasks.overdue > 0 && (
+          <button className="alert-card" onClick={() => onNavigate('tasks')}>
+            <span className="alert-card__icon">
+              <IconAlert width={17} height={17} />
+            </span>
+            <span className="alert-card__body">
+              <strong>
+                <span dir="ltr">{tasks.overdue}</span> משימות באיחור
+              </strong>
+              <span>חריגה מיעדי ה-SLA — לחץ לצפייה</span>
+            </span>
+          </button>
+        )}
 
         <div className="sidebar__foot">
           <div className="sidebar__user">

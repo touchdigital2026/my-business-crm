@@ -1,12 +1,4 @@
-import { IconSearch, IconBell, IconMenu } from './icons.jsx'
-
-/* ברכה שמשתנה לפי שעת היום */
-function greeting() {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'בוקר טוב'
-  if (hour < 18) return 'צהריים טובים'
-  return 'ערב טוב'
-}
+import { IconBell, IconMenu, IconStorage } from './icons.jsx'
 
 const TODAY = new Date().toLocaleDateString('he-IL', {
   weekday: 'long',
@@ -15,7 +7,12 @@ const TODAY = new Date().toLocaleDateString('he-IL', {
   year: 'numeric',
 })
 
-export default function Topbar({ user, onOpenMenu }) {
+/* מכסת אחסון המסמכים – מחוון בסרגל העליון לפי סעיף 16.3 */
+const STORAGE = { usedGb: 6.4, totalGb: 20 }
+
+export default function Topbar({ user, breadcrumbs, onOpenMenu }) {
+  const storagePct = Math.round((STORAGE.usedGb / STORAGE.totalGb) * 100)
+
   return (
     <header className="topbar">
       <button className="topbar__menu" onClick={onOpenMenu} aria-label="פתיחת התפריט">
@@ -23,22 +20,32 @@ export default function Topbar({ user, onOpenMenu }) {
       </button>
 
       <div className="topbar__titles">
-        <h1 className="topbar__title">
-          {greeting()}, {user.name}
-        </h1>
+        {/* נתיב ניווט (Breadcrumbs) – סעיף 16.3 */}
+        <nav className="crumbs" aria-label="נתיב ניווט">
+          {breadcrumbs.map((crumb, i) => (
+            <span key={crumb} className="crumbs__item">
+              {i > 0 && <span className="crumbs__sep">/</span>}
+              <span className={i === breadcrumbs.length - 1 ? 'crumbs__current' : ''}>{crumb}</span>
+            </span>
+          ))}
+        </nav>
         <p className="topbar__date">{TODAY}</p>
       </div>
 
       <div className="topbar__actions">
-        <div className="search">
-          <IconSearch width={18} height={18} />
-          <input
-            className="search__input"
-            type="search"
-            placeholder="חיפוש ליד, לקוח או קמפיין..."
-            aria-label="חיפוש"
-          />
+        <div className="storage" title={`נוצלו ${STORAGE.usedGb}GB מתוך ${STORAGE.totalGb}GB`}>
+          <IconStorage width={17} height={17} />
+          <div className="storage__body">
+            <div className="storage__label">
+              אחסון מסמכים
+              <span dir="ltr">{STORAGE.usedGb}GB / {STORAGE.totalGb}GB</span>
+            </div>
+            <div className="storage__track">
+              <div className="storage__fill" style={{ width: `${storagePct}%` }} />
+            </div>
+          </div>
         </div>
+
         <button className="icon-btn" aria-label="התראות">
           <IconBell width={19} height={19} />
           <span className="icon-btn__dot" />

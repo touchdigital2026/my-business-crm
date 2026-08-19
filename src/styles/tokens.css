@@ -1,59 +1,82 @@
 /* ============================================================
-   CRM – Design tokens (ערכת העיצוב המרכזית של המערכת)
-   כל צבע/רדיוס מוגדר כאן פעם אחת, וכל המסכים משתמשים בו.
+   ערכת העיצוב המרכזית – לפי סעיף 16 באפיון.
+   כל צבע, פינה וגופן מוגדרים כאן פעם אחת בלבד.
    ============================================================ */
 :root {
-  --bg: #08080C;
-  --bg-elevated: #101018;
-  --surface: #13131C;
-  --surface-2: #1A1A25;
-  --border: #262633;
-  --border-strong: #34344a;
+  /* ---- סרגל צד: כמעט-שחור בגוון נייבי-סגלגל (16.1) ---- */
+  --sidebar-top: #1B1830;
+  --sidebar-bottom: #16131F;
+  --sidebar-line: rgba(255, 255, 255, 0.07);
 
-  --text: #F3F3F8;
-  --text-muted: #8C8CA1;
-  --text-dim: #5F5F73;
+  /* ---- אקצנט המותג: סגול חי עם גרדיאנט לכחול-סגול (16.1) ---- */
+  --accent: #6B4CF9;
+  --accent-light: #7C5CFC;
+  --accent-deep: #5B3DF5;
+  --accent-hover: #8168FF;
+  --accent-soft: rgba(124, 92, 252, 0.14);
+  --accent-glow: rgba(107, 76, 249, 0.45);
+  --accent-gradient: linear-gradient(135deg, #7C5CFC 0%, #5B3DF5 100%);
 
-  --accent: #6D5EF6;
-  --accent-hover: #7E70FF;
-  --accent-press: #5B4CE0;
-  --accent-soft: rgba(109, 94, 246, 0.14);
-  --accent-glow: rgba(109, 94, 246, 0.45);
-  --accent-gradient: linear-gradient(135deg, #6D5EF6 0%, #4E7BFF 100%);
+  /* ---- טקסט על רקע כהה ---- */
+  --text: #F4F3F9;
+  --text-muted: #9E9AB4;
+  --text-dim: #6B6785;
 
-  --danger: #FF6B7D;
-  --success: #3ED598;
+  /* ---- אזור התוכן הבהיר (16.1) ---- */
+  --content-bg: #F7F7FB;      /* לא לבן חד */
+  --card: #FFFFFF;            /* כרטיסים: לבן טהור */
+  --card-border: #ECECF3;
+  --card-shadow: 0 1px 2px rgba(22, 19, 31, 0.04), 0 10px 30px -14px rgba(22, 19, 31, 0.12);
+  --ink: #1A1826;             /* כותרות: אפור כהה כמעט שחור */
+  --ink-2: #5C5A70;           /* טקסט משני: אפור בינוני */
+  --ink-3: #8E8CA3;
+  --grid: #EEEEF5;
+  --hover-light: #F8F8FC;
 
-  --radius-sm: 10px;
-  --radius: 14px;
-  --radius-lg: 22px;
-
-  --shadow-card: 0 24px 60px rgba(0, 0, 0, 0.55);
-  --font: 'Heebo', system-ui, -apple-system, 'Segoe UI', sans-serif;
-
-  /* ---- אזור התוכן הבהיר (הדשבורד) ---- */
-  --content-bg: #F4F5F9;
-  --card: #FFFFFF;
-  --card-border: #E7E8F0;
-  --card-shadow: 0 1px 2px rgba(16, 18, 42, 0.04), 0 8px 24px -12px rgba(16, 18, 42, 0.10);
-  --ink: #14141F;         /* טקסט ראשי כהה */
-  --ink-2: #5A5C70;       /* טקסט משני */
-  --ink-3: #8A8CA0;       /* טקסט עמום */
-  --grid: #ECEDF3;        /* קווי עזר בגרפים */
-  --hover-light: #F7F7FC;
+  /* ---- פינות מעוגלות (16.2) ---- */
+  --radius-card: 22px;        /* כרטיסים ולוחות תוכן: 20–24px */
+  --radius-btn: 14px;         /* כפתורים: 12–16px */
+  --radius-pill: 999px;       /* כפתורי Pill ותגיות */
+  --radius-input: 12px;       /* שדות קלט וחיפוש */
+  --radius-icon: 12px;        /* אייקוני תפריט הצד */
 
   /* ---- צבעי גרפים ----
-     הזוג הזה נבדק אוטומטית ועובר את כל תקני הנגישות
-     (כולל הבחנה עבור עיוורי צבעים) על רקע לבן. */
-  --chart-1: #6D5EF6;     /* לידים – סגול המותג */
-  --chart-2: #14916A;     /* עסקאות שנסגרו – ירוק-טורקיז */
+     הזוג נבדק אוטומטית ועובר את כל תקני הנגישות על רקע לבן,
+     כולל הבחנה עבור עיוורון צבעים (ΔE 40.3). */
+  --chart-income: #5B3DF5;    /* הכנסות – סגול המותג */
+  --chart-expense: #EB6834;   /* הוצאות – כתום */
 
-  /* ---- צבעי סטטוס (קבועים, לא מתחלפים) ----
-     כל סטטוס מופיע תמיד יחד עם טקסט, לעולם לא צבע לבד. */
-  --status-good: #0CA30C;
-  --status-warning: #FAB219;
-  --status-serious: #EC835A;
-  --status-critical: #D03B3B;
+  /* סולם מדורג לשלוש רמות החבילות (נבדק כסולם ordinal תקין) */
+  --tier-1: #A08FFC;          /* סטנדרט */
+  --tier-2: #7C5CFC;          /* ביניים */
+  --tier-3: #5B3DF5;          /* פרימיום */
+
+  /* ---- צבעי סטטוס ותגיות (16.1) ----
+     כל תגית מוצגת תמיד עם טקסט – הצבע לעולם אינו המידע היחיד. */
+  --status-active: #0CA30C;   /* פעיל / הושלם */
+  --status-pending: #FAB219;  /* ממתין / אזהרה */
+  --status-late: #D03B3B;     /* באיחור / דחוף */
+  --status-secondary: #7C5CFC;/* תגיות משניות */
+  --status-muted: #8E8CA3;    /* תגיות "מוגבל" */
+
+  /* ---- משטחים כהים למסך ההתחברות ----
+     נגזרים מגוון הנייבי-סגלגל של סרגל הצד כדי לשמור על שפה אחת. */
+  --bg: #100E1A;
+  --bg-elevated: #191627;
+  --surface: #1B1830;
+  --surface-2: #221F3A;
+  --border: #2E2A47;
+  --border-strong: #3D3860;
+  --danger: #FF7385;
+  --shadow-card: 0 24px 60px rgba(8, 6, 16, 0.6);
+
+  /* כינויים לפינות – כדי שמסך ההתחברות ימשיך לעבוד עם אותם ערכים */
+  --radius: var(--radius-btn);
+  --radius-sm: var(--radius-input);
+  --radius-lg: var(--radius-card);
+
+  /* ---- טיפוגרפיה (16.4) ---- */
+  --font: 'Assistant', 'Rubik', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -62,9 +85,8 @@ html, body, #root { height: 100%; }
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--content-bg);
+  color: var(--ink);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
 }
-

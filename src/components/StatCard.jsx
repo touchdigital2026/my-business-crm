@@ -30,7 +30,7 @@ function Sparkline({ points }) {
       <polyline
         points={line}
         fill="none"
-        stroke="var(--chart-1)"
+        stroke="var(--accent)"
         strokeOpacity="0.32"
         strokeWidth="2"
         strokeLinecap="round"
@@ -38,12 +38,12 @@ function Sparkline({ points }) {
       />
       {/* טבעת בצבע הרקע כדי שהנקודה תישאר ברורה גם מעל הקו */}
       <circle cx={lastX} cy={lastY} r="4.5" fill="var(--card)" />
-      <circle cx={lastX} cy={lastY} r="3.2" fill="var(--chart-1)" />
+      <circle cx={lastX} cy={lastY} r="3.2" fill="var(--accent)" />
     </svg>
   )
 }
 
-export default function StatCard({ label, value, format, delta, goodDirection, trend }) {
+export default function StatCard({ label, value, format, delta, goodDirection, trend, Icon, tone = 'accent', note }) {
   const isUp = delta >= 0
   // האם השינוי חיובי מבחינה עסקית? (ירידה בשיעור המרה = רע)
   const isGood = goodDirection === 'up' ? isUp : !isUp
@@ -51,7 +51,15 @@ export default function StatCard({ label, value, format, delta, goodDirection, t
 
   return (
     <article className="card stat">
-      <p className="stat__label">{label}</p>
+      <div className="stat__head">
+        {/* אייקון צבעוני עגול בפינת הכרטיס – סעיף 16.3 */}
+        {Icon && (
+          <span className={`card__icon card__icon--${tone}`}>
+            <Icon width={18} height={18} />
+          </span>
+        )}
+        <p className="stat__label">{label}</p>
+      </div>
       <div className="stat__row">
         {/* dir="ltr" – מספרים וסימנים כמו ₪ ו-% תמיד נקראים משמאל לימין,
             גם בתוך עמוד בעברית */}
@@ -68,6 +76,7 @@ export default function StatCard({ label, value, format, delta, goodDirection, t
         </span>
         <span className="stat__delta-note">מהחודש שעבר</span>
       </div>
+      {note && <p className="stat__note">{note}</p>}
     </article>
   )
 }
