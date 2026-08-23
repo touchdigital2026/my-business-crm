@@ -1,13 +1,22 @@
-import { pipeline } from '../data/mockData.js'
+import { useCrm } from '../store/CrmContext.jsx'
+import { pipelineStages } from '../data/mockData.js'
 
 /* סעיף 13.5 – פייפליין מכירות: מספר לידים בכל שלב ואחוז המרה.
-   סדרה אחת בלבד, ולכן צבע אחד: אורך העמודה הוא המידע.
-   צביעת כל שלב בגוון אחר הייתה מוסיפה רעש בלי משמעות. */
+   הנתונים נגזרים מרשימת הלידים האמיתית, ולכן הכרטיס מתעדכן
+   מיד כשממירים ליד ללקוח במסך הלידים.
+
+   סדרה אחת בלבד, ולכן צבע אחד: אורך העמודה הוא המידע. */
 export default function PipelineCard() {
-  const { stages, enteredLast30, wonLast30, lostLast30 } = pipeline
-  const max = Math.max(...stages.map((s) => s.count))
-  const inPipeline = stages.reduce((sum, s) => sum + s.count, 0)
-  const conversion = ((wonLast30 / enteredLast30) * 100).toFixed(1)
+  const { activeLeads, wonLeads, lostLeads } = useCrm()
+
+  const stages = pipelineStages.map((stage) => ({
+    name: stage.name,
+    count: activeLeads.filter((l) => l.stage === stage.id).length,
+  }))
+  const max = Math.max(...stages.map((s) => s.count), 1)
+  const decided = wonLeads.length + lostLeads.length
+  const entered = activeLeads.length + decided
+  const conversion = entered ? ((wonLeads.length / entered) * 100).toFixed(1) : '0.0'
 
   return (
     <section className="card">
@@ -21,31 +30,30 @@ export default function PipelineCard() {
           </span>
           <div>
             <h2 className="card__title">פייפליין מכירות</h2>
-            <p className="card__subtitle">{inPipeline} לידים פעילים בתהליך</p>
+            <p className="card__subtitle">{activeLeads.length} לידים פעילים בתהליך</p>
           </div>
         </div>
       </div>
 
-      {/* אחוז ההמרה – המספר שמסכם את כל הפייפליין */}
       <div className="conversion">
         <div className="conversion__main">
           <span className="conversion__value" dir="ltr">{conversion}%</span>
-          <span className="conversion__label">אחוז המרה, 30 הימים האחרונים</span>
+          <span className="conversion__label">אחוז המרה מסך הלידים</span>
         </div>
         <ul className="conversion__facts">
           <li>
-            <span className="conversion__fact-value" dir="ltr">{enteredLast30}</span>
-            <span className="conversion__fact-label">לידים נכנסו</span>
+            <span className="conversion__fact-value" dir="ltr">{entered}</span>
+            <span className="conversion__fact-label">סה"כ לידים</span>
           </li>
           <li>
             <span className="conversion__fact-value conversion__fact-value--good" dir="ltr">
-              {wonLast30}
+              {wonLeads.length}
             </span>
             <span className="conversion__fact-label">נסגרו</span>
           </li>
           <li>
             <span className="conversion__fact-value conversion__fact-value--bad" dir="ltr">
-              {lostLast30}
+              {lostLeads.length}
             </span>
             <span className="conversion__fact-label">אבדו</span>
           </li>
@@ -60,10 +68,7 @@ export default function PipelineCard() {
               <span className="bars__value" dir="ltr">{stage.count}</span>
             </div>
             <div className="bars__track">
-              <div
-                className="bars__fill"
-                style={{ width: `${(stage.count / max) * 100}%` }}
-              />
+              <div className="bars__fill" style={{ width: `${(stage.count / max) * 100}%` }} />
             </div>
           </li>
         ))}

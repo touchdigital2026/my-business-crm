@@ -1,16 +1,18 @@
-import { clientsByPackage, packageById, formatCurrency } from '../data/mockData.js'
+import { useCrm } from '../store/CrmContext.jsx'
+import { packageById, formatCurrency } from '../data/mockData.js'
 
 /* סעיף 13.1 – מספר לקוחות פעילים לפי חבילה.
    שלוש החבילות הן דרגות מסודרות (סטנדרט < ביניים < פרימיום),
    ולכן הן צבועות בסולם סגול מדורג מבהיר לכהה ולא בצבעים אקראיים. */
 export default function PackagesCard() {
+  const { clientsByPackage } = useCrm()
   const rows = clientsByPackage.map((row) => {
     const pkg = packageById[row.packageId]
     return { ...row, ...pkg, monthly: row.active * pkg.price }
   })
   const totalActive = rows.reduce((sum, r) => sum + r.active, 0)
   const totalSetup = rows.reduce((sum, r) => sum + r.inSetup, 0)
-  const max = Math.max(...rows.map((r) => r.active))
+  const max = Math.max(...rows.map((r) => r.active), 1)
 
   return (
     <section className="card">

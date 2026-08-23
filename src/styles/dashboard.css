@@ -783,3 +783,278 @@
   .chip-btn { height: 40px; padding: 0 16px; }
   .icon-btn, .topbar__menu { width: 44px; height: 44px; }
 }
+
+/* ============================================================
+   מסך ניהול הלידים (סעיף 4)
+   ============================================================ */
+
+/* שורת סינון אחת מעל הרשימה */
+.filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+}
+
+.filters__search {
+  flex: 1 1 260px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 42px;
+  padding: 0 13px;
+  background: var(--hover-light);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-input);
+  color: var(--ink-3);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.filters__search:focus-within {
+  border-color: var(--accent);
+  background: var(--card);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.filters__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.filters__search input::placeholder { color: var(--ink-3); }
+
+.select { display: flex; flex-direction: column; gap: 6px; }
+.select__label { font-size: 11.5px; color: var(--ink-3); padding-inline-start: 2px; }
+.select select {
+  height: 42px;
+  min-width: 150px;
+  padding: 0 12px;
+  background: var(--hover-light);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-input);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 13.5px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.select select:hover { border-color: var(--border-strong); }
+.select select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+/* שתי שורות בתא אחד: שם העסק ושם איש הקשר */
+.cell-lead { display: flex; flex-direction: column; gap: 1px; }
+.cell-lead__business { font-weight: 600; }
+.cell-lead__name { font-size: 12px; color: var(--ink-3); }
+
+/* כפתור ההמרה בשורת הליד */
+.btn-convert {
+  height: 34px;
+  padding: 0 15px;
+  background: var(--accent-soft);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  color: var(--accent-deep);
+  font-family: var(--font);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.btn-convert:hover {
+  background: var(--accent-gradient);
+  color: #fff;
+  box-shadow: 0 8px 18px -8px var(--accent-glow);
+}
+
+.empty-rows {
+  padding: 44px 20px;
+  text-align: center;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.empty-rows p { margin: 0 0 16px; }
+
+/* הודעת הצלחה אחרי המרה */
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px 18px;
+  background: rgba(12, 163, 12, 0.08);
+  border: 1px solid rgba(12, 163, 12, 0.3);
+  border-radius: var(--radius-card);
+}
+.banner__icon {
+  width: 32px; height: 32px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(12, 163, 12, 0.16);
+  color: #0A7A0A;
+}
+.banner__body { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.banner__body strong { font-size: 14px; color: var(--ink); }
+.banner__body span { font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+.banner__close {
+  flex: none;
+  background: none;
+  border: 0;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+}
+.banner__close:hover { color: var(--ink); background: rgba(0,0,0,0.05); }
+
+/* ------------------------------------------------------------
+   חלון אישור ההמרה
+   ------------------------------------------------------------ */
+.modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(22, 19, 31, 0.55);
+  backdrop-filter: blur(3px);
+  animation: fade-in 0.16s ease;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border-radius: var(--radius-card);
+  box-shadow: 0 30px 70px -20px rgba(22, 19, 31, 0.5);
+  animation: modal-in 0.2s ease;
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--card-border);
+}
+.modal__title { margin: 0; font-size: 18px; font-weight: 600; color: var(--ink); }
+.modal__subtitle { margin: 4px 0 0; font-size: 13px; color: var(--ink-3); }
+.modal__close {
+  flex: none;
+  background: none;
+  border: 0;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 9px;
+}
+.modal__close:hover { color: var(--ink); background: var(--hover-light); }
+
+.modal__body { padding: 20px 24px; overflow-y: auto; }
+
+.modal__summary {
+  display: flex;
+  gap: 26px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  background: var(--hover-light);
+  border-radius: var(--radius-btn);
+}
+.modal__summary > div { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
+.modal__summary-label { font-size: 11.5px; color: var(--ink-3); }
+.modal__summary-value { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+
+.modal__note { margin: 0 0 14px; font-size: 13.5px; color: var(--ink-2); line-height: 1.7; }
+.modal__note strong { color: var(--accent-deep); }
+
+.setup-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.setup-tasks__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.setup-tasks__row:last-child { border-bottom: 0; }
+.setup-tasks__num {
+  width: 24px; height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.setup-tasks__title { flex: 1; font-size: 13.5px; color: var(--ink); }
+.setup-tasks__sla {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+/* מסמן יעד זמן שאינו מופיע במפורש בטבלת סעיף 6.2 */
+.setup-tasks__assumed {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(250, 178, 25, 0.18);
+  color: #8A6100;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--card-border);
+}
+.modal__foot .btn-ghost {
+  height: 44px;
+  padding: 0 20px;
+  background: var(--hover-light);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.modal__foot .btn-ghost:hover { color: var(--ink); border-color: var(--border-strong); }
+
+/* במובייל הטופס נפתח כמסך מלא (סעיף 16.6) */
+@media (max-width: 767px) {
+  .modal-layer { padding: 0; }
+  .modal {
+    max-width: none;
+    max-height: none;
+    height: 100vh;
+    border-radius: 0;
+  }
+  .filters { padding: 14px; }
+  .filters__search, .select, .select select { flex-basis: 100%; width: 100%; }
+  .btn-convert { height: 40px; }
+}

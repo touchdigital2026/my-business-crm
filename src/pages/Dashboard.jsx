@@ -8,10 +8,10 @@ import FinanceChart from '../components/FinanceChart.jsx'
 import TasksByAssignee from '../components/TasksByAssignee.jsx'
 import AtRiskClients from '../components/AtRiskClients.jsx'
 import SubcontractorsCard from '../components/SubcontractorsCard.jsx'
+import Leads from './Leads.jsx'
 import { IconCustomers, IconWallet, IconTrend, IconAlert } from '../components/icons.jsx'
-import {
-  clientsByPackage, revenue, expenses, tasks, atRiskClients,
-} from '../data/mockData.js'
+import { useCrm } from '../store/CrmContext.jsx'
+import { expenses } from '../data/mockData.js'
 
 const PAGE_TITLES = {
   dashboard: 'דשבורד',
@@ -35,10 +35,15 @@ export default function Dashboard({ user, onLogout }) {
     setMenuOpen(false)
   }
 
-  /* ארבעת המדדים הראשיים, נגזרים מהנתונים של סעיף 13 */
-  const activeClients = clientsByPackage.reduce((sum, c) => sum + c.active, 0)
-  const inSetup = clientsByPackage.reduce((sum, c) => sum + c.inSetup, 0)
+  /* ארבעת המדדים הראשיים – נגזרים מהמחסן המשותף, ולכן מתעדכנים
+     מיד כשממירים ליד ללקוח במסך הלידים. */
+  const { activeClients: activeList, setupClients, revenue, overdueTasks, clients } = useCrm()
+  const activeClients = activeList.length
+  const inSetup = setupClients.length
   const profit = revenue.actual - expenses.total
+  const atRiskCount = clients.filter(
+    (c) => c.paymentStatus === 'overdue' || (c.inactiveDays || 0) > 30
+  ).length
 
   const kpis = [
     {
@@ -77,14 +82,14 @@ export default function Dashboard({ user, onLogout }) {
     {
       id: 'overdue',
       label: 'משימות באיחור',
-      value: tasks.overdue,
+      value: overdueTasks.length,
       format: 'number',
       delta: -16.7,
       goodDirection: 'down',
       trend: [8, 9, 7, 8, 7, 7, 6, 7, 6, 6, 6, 5],
       Icon: IconAlert,
       tone: 'danger',
-      note: `${atRiskClients.length} לקוחות בסיכון תשלום`,
+      note: `${atRiskCount} לקוחות בסיכון תשלום`,
     },
   ]
 
@@ -108,7 +113,9 @@ export default function Dashboard({ user, onLogout }) {
           onOpenMenu={() => setMenuOpen(true)}
         />
 
-        {activePage === 'dashboard' ? (
+        {activePage === 'leads' ? (
+          <Leads />
+        ) : activePage === 'dashboard' ? (
           <div className="content__body">
             <div className="kpi-grid">
               {kpis.map((kpi) => (

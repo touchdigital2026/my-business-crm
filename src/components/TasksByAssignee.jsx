@@ -1,8 +1,10 @@
-import { tasks } from '../data/mockData.js'
+import { useCrm } from '../store/CrmContext.jsx'
+import { assigneeRoles } from '../data/mockData.js'
 
 /* סעיף 13.4 – משימות פתוחות ומשימות באיחור, סה"כ ולפי אחראי. */
 export default function TasksByAssignee() {
-  const max = Math.max(...tasks.byAssignee.map((a) => a.open))
+  const { openTasks, overdueTasks, tasksByAssignee, dueTodayCount } = useCrm()
+  const max = Math.max(...tasksByAssignee.map((a) => a.open), 1)
 
   return (
     <section className="card">
@@ -24,21 +26,21 @@ export default function TasksByAssignee() {
 
       <div className="totals">
         <div className="totals__item">
-          <span className="totals__value" dir="ltr">{tasks.open}</span>
+          <span className="totals__value" dir="ltr">{openTasks.length}</span>
           <span className="totals__label">פתוחות</span>
         </div>
         <div className="totals__item totals__item--late">
-          <span className="totals__value" dir="ltr">{tasks.overdue}</span>
+          <span className="totals__value" dir="ltr">{overdueTasks.length}</span>
           <span className="totals__label">באיחור</span>
         </div>
         <div className="totals__item">
-          <span className="totals__value" dir="ltr">{tasks.dueToday}</span>
+          <span className="totals__value" dir="ltr">{dueTodayCount}</span>
           <span className="totals__label">להיום</span>
         </div>
       </div>
 
       <ul className="assignees">
-        {tasks.byAssignee.map((person) => (
+        {tasksByAssignee.map((person) => (
           <li key={person.name} className="assignees__row">
             <span className="avatar avatar--sm">{person.name.charAt(0)}</span>
             <div className="assignees__info">
@@ -54,7 +56,7 @@ export default function TasksByAssignee() {
                   )}
                 </span>
               </div>
-              <div className="assignees__role">{person.role}</div>
+              <div className="assignees__role">{assigneeRoles[person.name] || ""}</div>
               <div className="bars__track bars__track--thin">
                 <div
                   className="bars__fill"

@@ -3,14 +3,14 @@ import {
   IconPayments, IconExpenses, IconDocuments, IconUsers, IconReports,
   IconLogout, IconClose, IconSearch, IconAlert,
 } from './icons.jsx'
-import { tasks } from '../data/mockData.js'
+import { useCrm } from '../store/CrmContext.jsx'
 
 /* המודולים לפי סעיף 16.3 באפיון. כדי להוסיף מסך – מוסיפים כאן שורה. */
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'דשבורד', Icon: IconDashboard },
-  { id: 'leads', label: 'לידים', Icon: IconLeads, badge: 38 },
-  { id: 'clients', label: 'לקוחות', Icon: IconCustomers, badge: 24 },
-  { id: 'tasks', label: 'משימות', Icon: IconTasks, badge: 18 },
+  { id: 'leads', label: 'לידים', Icon: IconLeads },
+  { id: 'clients', label: 'לקוחות', Icon: IconCustomers },
+  { id: 'tasks', label: 'משימות', Icon: IconTasks },
   { id: 'subcontractors', label: 'קבלני משנה', Icon: IconSubcontractors },
   { id: 'payments', label: 'תשלומים', Icon: IconPayments },
   { id: 'expenses', label: 'הוצאות', Icon: IconExpenses },
@@ -20,6 +20,14 @@ const NAV_ITEMS = [
 ]
 
 export default function Sidebar({ active, onNavigate, user, onLogout, open, onClose }) {
+  /* מוני התפריט וכרטיס ההתראה נגזרים מהנתונים האמיתיים */
+  const { activeLeads, activeClients, setupClients, openTasks, overdueTasks } = useCrm()
+  const counts = {
+    leads: activeLeads.length,
+    clients: activeClients.length + setupClients.length,
+    tasks: openTasks.length,
+  }
+
   return (
     <>
       <div
@@ -53,7 +61,7 @@ export default function Sidebar({ active, onNavigate, user, onLogout, open, onCl
         </div>
 
         <nav className="sidebar__nav" aria-label="ניווט ראשי">
-          {NAV_ITEMS.map(({ id, label, Icon, badge }) => (
+          {NAV_ITEMS.map(({ id, label, Icon }) => (
             <button
               key={id}
               className={`nav-item ${active === id ? 'is-active' : ''}`}
@@ -64,20 +72,22 @@ export default function Sidebar({ active, onNavigate, user, onLogout, open, onCl
                 <Icon width={18} height={18} />
               </span>
               <span className="nav-item__label">{label}</span>
-              {badge && <span className="nav-item__badge" dir="ltr">{badge}</span>}
+              {counts[id] > 0 && (
+                <span className="nav-item__badge" dir="ltr">{counts[id]}</span>
+              )}
             </button>
           ))}
         </nav>
 
         {/* כרטיס התראה קבוע בתחתית הסרגל – סעיף 16.3 */}
-        {tasks.overdue > 0 && (
+        {overdueTasks.length > 0 && (
           <button className="alert-card" onClick={() => onNavigate('tasks')}>
             <span className="alert-card__icon">
               <IconAlert width={17} height={17} />
             </span>
             <span className="alert-card__body">
               <strong>
-                <span dir="ltr">{tasks.overdue}</span> משימות באיחור
+                <span dir="ltr">{overdueTasks.length}</span> משימות באיחור
               </strong>
               <span>חריגה מיעדי ה-SLA — לחץ לצפייה</span>
             </span>

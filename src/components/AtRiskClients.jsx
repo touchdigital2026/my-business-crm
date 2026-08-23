@@ -1,11 +1,17 @@
-import { atRiskClients, packageById, formatCurrency } from '../data/mockData.js'
+import { useCrm } from '../store/CrmContext.jsx'
+import { packageById, formatCurrency } from '../data/mockData.js'
 
 /* סעיף 13.6 – לקוחות בסיכון תשלום:
    איחור בתשלום, או חוסר פעילות מעל מספר ימים מוגדר. */
+const INACTIVE_DAYS_THRESHOLD = 30
+
 export default function AtRiskClients() {
-  const overdueTotal = atRiskClients
-    .filter((c) => c.reason === 'overdue')
-    .reduce((sum, c) => sum + c.amount, 0)
+  const { clients } = useCrm()
+
+  const atRisk = clients.filter(
+    (c) => c.paymentStatus === 'overdue' || (c.inactiveDays || 0) > INACTIVE_DAYS_THRESHOLD
+  )
+  const overdueTotal = atRisk.reduce((sum, c) => sum + (c.overdueAmount || 0), 0)
 
   return (
     <section className="card">
@@ -22,7 +28,7 @@ export default function AtRiskClients() {
           <div>
             <h2 className="card__title">לקוחות בסיכון תשלום</h2>
             <p className="card__subtitle">
-              {atRiskClients.length} לקוחות · <span dir="ltr">{formatCurrency(overdueTotal)}</span> בפיגור
+              {atRisk.length} לקוחות · <span dir="ltr">{formatCurrency(overdueTotal)}</span> בפיגור
             </p>
           </div>
         </div>
@@ -41,23 +47,23 @@ export default function AtRiskClients() {
             </tr>
           </thead>
           <tbody>
-            {atRiskClients.map((client) => {
+            {atRisk.map((client) => {
               const pkg = packageById[client.packageId]
-              const isOverdue = client.reason === 'overdue'
+              const isOverdue = client.paymentStatus === 'overdue'
               return (
                 <tr key={client.id}>
                   <td className="cell-strong">{client.business}</td>
+                  <td><span className={`pill pill--tier${pkg.tier}`}>{pkg.name}</span></td>
                   <td>
-                    <span className={`pill pill--tier${pkg.tier}`}>{pkg.name}</span>
-                  </td>
-                  <td>
+                    {/* הסטטוס תמיד מוצג כטקסט, הצבע רק מחזק אותו */}
                     <span className={`pill ${isOverdue ? 'pill--late' : 'pill--pending'}`}>
-                      {isOverdue ? 'איחור בתשלום' : 'ללא פעילות'} · <span dir="ltr">{client.days}</span> ימים
+                      {isOverdue ? 'איחור בתשלום' : 'ללא פעילות'} ·{' '}
+                      <span dir="ltr">{isOverdue ? client.overdueDays : client.inactiveDays}</span> ימים
                     </span>
                   </td>
                   <td className="num">
-                    {client.amount > 0 ? (
-                      <span dir="ltr">{formatCurrency(client.amount)}</span>
+                    {client.overdueAmount ? (
+                      <span dir="ltr">{formatCurrency(client.overdueAmount)}</span>
                     ) : (
                       <span className="muted">—</span>
                     )}
