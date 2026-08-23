@@ -56,40 +56,63 @@ export const initialLeads = [
 ]
 
 /* ===== לקוחות =====
-   status: active = תחזוקה שוטפת | setup = בהקמה (סעיף 3.1) */
-const c = (id, business, contact, packageId, status, owner, extra = {}) =>
-  ({ id, business, contact, packageId, status, owner, ...extra })
+   status: active = תחזוקה שוטפת | setup = בהקמה | frozen = מוקפא (סעיף 3.1)
+   פרטי הזיהוי (סעיף 3.2) – טלפון, אימייל, תחום, כתובת ותאריכי
+   התקשרות – נוצרים דטרמיניסטית עבור נתוני הדמו. */
+const CITIES = ['תל אביב', 'רמת גן', 'חיפה', 'ירושלים', 'ראשון לציון', 'נתניה', 'באר שבע', 'הרצליה']
+let clientIndex = 0
+
+const c = (id, business, contact, industry, packageId, status, owner, extra = {}) => {
+  const i = clientIndex++
+  const start = new Date()
+  start.setDate(1)
+  start.setMonth(start.getMonth() - (3 + ((i * 5) % 20)))   // ותק של 3–22 חודשים
+  const renewal = new Date(start)
+  renewal.setFullYear(renewal.getFullYear() + 1)
+  return {
+    id, business, contact, industry, packageId, status, owner,
+    phone: `05${[2, 3, 4, 0][i % 4]}-${String(1100000 + ((i * 793571) % 8899999)).slice(0, 7)}`,
+    email: `office@client-${id.slice(1)}.co.il`,
+    address: `${CITIES[i % CITIES.length]}`,
+    startDate: start.toISOString(),
+    renewalDate: renewal.toISOString(),
+    notes: '',
+    ...extra,
+  }
+}
 
 export const initialClients = [
-  c('C01', 'מזרחי נדל"ן', 'אורי מזרחי', 'premium', 'active', 'יעל אדרי', { paymentStatus: 'overdue', overdueDays: 24, overdueAmount: 5000 }),
-  c('C02', 'Bloom קוסמטיקה', 'שירה לוי', 'mid', 'active', 'יעל אדרי', { paymentStatus: 'overdue', overdueDays: 12, overdueAmount: 3000 }),
-  c('C03', 'קפה נועה', 'נועה פרידמן', 'standard', 'active', 'אורי מזרחי', { paymentStatus: 'paid', inactiveDays: 47 }),
-  c('C04', 'שגיא ייעוץ עסקי', 'רון שגיא', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'overdue', overdueDays: 8, overdueAmount: 2000 }),
-  c('C05', 'טכנופלוס', 'יוסי אברהם', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid', inactiveDays: 33 }),
-  c('C06', 'לין סטודיו', 'דנה לין', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C07', 'אורבן פיצה', 'טום אורבך', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C08', 'גרין גארדן', 'ליאת גרין', 'standard', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C09', 'קליניקת ד"ר שני', 'שני רז', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C10', 'מוסך אבי', 'אבי חן', 'standard', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C11', 'סטייל ביוטי', 'רינת סתיו', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C12', 'בוטיק אלה', 'אלה נבו', 'standard', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C13', 'הנדימן פלוס', 'מוטי דהן', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C14', 'פיט קלאב', 'עידו שרון', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C15', 'נדל"ן 360', 'שרון גל', 'mid', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C16', 'משרד עו"ד ברק', 'ניר ברק', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C17', 'דנטל קר', 'עמית לביא', 'mid', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C18', 'אירועי הזהב', 'מירי זהבי', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C19', 'טק סולושנס', 'רועי בר', 'mid', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C20', 'סטודיו פוקוס', 'נטע אור', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C21', 'אלפא ייעוץ', 'דני אלפא', 'premium', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C22', 'רשת מאפה טוב', 'שלומי טוב', 'premium', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C23', 'אוטו טרייד', 'גיא קרן', 'premium', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C24', 'מדיקל ביוטי', 'ליאור עדן', 'premium', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C01', 'מזרחי נדל"ן', 'אורי מזרחי', 'נדל"ן ותיווך', 'premium', 'active', 'יעל אדרי', { paymentStatus: 'overdue', overdueDays: 24, overdueAmount: 5000 }),
+  c('C02', 'Bloom קוסמטיקה', 'שירה לוי', 'קוסמטיקה וטיפוח', 'mid', 'active', 'יעל אדרי', { paymentStatus: 'overdue', overdueDays: 12, overdueAmount: 3000 }),
+  c('C03', 'קפה נועה', 'נועה פרידמן', 'מסעדנות ובתי קפה', 'standard', 'active', 'אורי מזרחי', { paymentStatus: 'paid', inactiveDays: 47 }),
+  c('C04', 'שגיא ייעוץ עסקי', 'רון שגיא', 'ייעוץ עסקי', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'overdue', overdueDays: 8, overdueAmount: 2000 }),
+  c('C05', 'טכנופלוס', 'יוסי אברהם', 'טכנולוגיה ומחשוב', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid', inactiveDays: 33 }),
+  c('C06', 'לין סטודיו', 'דנה לין', 'עיצוב גרפי', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C07', 'אורבן פיצה', 'טום אורבך', 'מסעדנות ובתי קפה', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C08', 'גרין גארדן', 'ליאת גרין', 'גינון ונוף', 'standard', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C09', 'קליניקת ד"ר שני', 'שני רז', 'רפואה אסתטית', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C10', 'מוסך אבי', 'אבי חן', 'רכב ותחבורה', 'standard', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C11', 'סטייל ביוטי', 'רינת סתיו', 'קוסמטיקה וטיפוח', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C12', 'בוטיק אלה', 'אלה נבו', 'אופנה וקמעונאות', 'standard', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C13', 'הנדימן פלוס', 'מוטי דהן', 'שיפוצים ותחזוקה', 'standard', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C14', 'פיט קלאב', 'עידו שרון', 'כושר וספורט', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C15', 'נדל"ן 360', 'שרון גל', 'נדל"ן ותיווך', 'mid', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C16', 'משרד עו"ד ברק', 'ניר ברק', 'עריכת דין', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C17', 'דנטל קר', 'עמית לביא', 'רפואת שיניים', 'mid', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C18', 'אירועי הזהב', 'מירי זהבי', 'הפקת אירועים', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C19', 'טק סולושנס', 'רועי בר', 'טכנולוגיה ומחשוב', 'mid', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C20', 'סטודיו פוקוס', 'נטע אור', 'צילום והפקה', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C21', 'אלפא ייעוץ', 'דני אלפא', 'ייעוץ עסקי', 'premium', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C22', 'רשת מאפה טוב', 'שלומי טוב', 'מאפיות ומזון', 'premium', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C23', 'אוטו טרייד', 'גיא קרן', 'רכב ותחבורה', 'premium', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C24', 'מדיקל ביוטי', 'ליאור עדן', 'רפואה אסתטית', 'premium', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
   /* לקוחות שנמצאים כרגע בשלב ההקמה – מהם מגיעה תחזית ההכנסה */
-  c('C25', 'עמית תעשיות', 'ניר עמית', 'premium', 'setup', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C26', 'סער עיצוב פנים', 'מאיה סער', 'mid', 'setup', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C27', 'שוקו ובוקר', 'עדי שוקרון', 'mid', 'setup', 'יעל אדרי', { paymentStatus: 'paid' }),
-  c('C28', 'ריהוט בוקסה', 'עומר בוקסה', 'standard', 'setup', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C25', 'עמית תעשיות', 'ניר עמית', 'תעשייה וייצור', 'premium', 'setup', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C26', 'סער עיצוב פנים', 'מאיה סער', 'עיצוב פנים', 'mid', 'setup', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  c('C27', 'שוקו ובוקר', 'עדי שוקרון', 'מסעדנות ובתי קפה', 'mid', 'setup', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C28', 'ריהוט בוקסה', 'עומר בוקסה', 'ריהוט ועיצוב הבית', 'standard', 'setup', 'אורי מזרחי', { paymentStatus: 'paid' }),
+  /* לקוח מוקפא – שלב 6 במחזור החיים (סימון ידני, סעיף 3.1) */
+  c('C29', 'סלון ורד', 'ורד יוקרה', 'עיצוב שיער', 'mid', 'frozen', 'יעל אדרי', { paymentStatus: 'paid', frozenReason: 'חוסר שביעות רצון – בתהליך שימור' }),
 ]
 
 /* ===== משימות =====

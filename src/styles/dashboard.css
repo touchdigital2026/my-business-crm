@@ -1058,3 +1058,226 @@
   .filters__search, .select, .select select { flex-basis: 100%; width: 100%; }
   .btn-convert { height: 40px; }
 }
+
+/* ============================================================
+   מסך ניהול הלקוחות (סעיף 3)
+   ============================================================ */
+
+.row-clickable { cursor: pointer; }
+
+.stack { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+.avatar--lg { width: 52px; height: 52px; border-radius: 16px; font-size: 21px; }
+
+/* --- כותרת כרטיס הלקוח --- */
+.client-head__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.client-head__pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.client-head__main { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.client-head__name { margin: 0; font-size: 21px; font-weight: 700; color: var(--ink); letter-spacing: -0.3px; }
+.client-head__meta { margin: 4px 0 0; font-size: 13px; color: var(--ink-2); }
+
+.alert-strip {
+  padding: 11px 14px;
+  margin-bottom: 18px;
+  background: rgba(208, 59, 59, 0.08);
+  border: 1px solid rgba(208, 59, 59, 0.25);
+  border-radius: var(--radius-btn);
+  font-size: 13px;
+  color: #B32B2B;
+}
+.alert-strip strong { font-weight: 600; }
+
+/* --- מד מחזור החיים (סעיף 3.1) --- */
+.stepper {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 2px;
+  overflow-x: auto;
+}
+.stepper__step {
+  position: relative;
+  flex: 1;
+  min-width: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  text-align: center;
+}
+/* קו מחבר בין השלבים */
+.stepper__step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 13px;
+  inset-inline-start: calc(50% + 18px);
+  width: calc(100% - 36px);
+  height: 2px;
+  border-radius: 1px;
+  background: var(--grid);
+}
+.stepper__step.is-done:not(:last-child)::after { background: var(--accent); opacity: 0.45; }
+
+.stepper__dot {
+  width: 27px; height: 27px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--grid);
+  color: var(--ink-3);
+  border: 2px solid transparent;
+}
+.stepper__step.is-done .stepper__dot { background: var(--accent-soft); color: var(--accent-deep); }
+.stepper__step.is-current .stepper__dot {
+  background: var(--accent-gradient);
+  color: #fff;
+  box-shadow: 0 6px 16px -6px var(--accent-glow);
+}
+.stepper__step.is-danger .stepper__dot {
+  background: var(--status-late);
+  box-shadow: 0 6px 16px -6px rgba(208, 59, 59, 0.5);
+}
+.stepper__label { font-size: 11.5px; color: var(--ink-3); line-height: 1.4; max-width: 110px; }
+.stepper__step.is-current .stepper__label { color: var(--ink); font-weight: 600; }
+.stepper__step.is-danger .stepper__label { color: #B32B2B; font-weight: 600; }
+
+/* --- רשת פרטי הלקוח --- */
+.info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 20px;
+}
+.info__item { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.info__label { font-size: 11.5px; color: var(--ink-3); }
+.info__value {
+  font-size: 13.5px;
+  color: var(--ink);
+  font-weight: 500;
+  overflow-wrap: break-word;
+}
+
+/* --- נכסים דיגיטליים --- */
+.assets { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.assets__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.assets__row:last-child { border-bottom: 0; }
+.assets__dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.assets__dot--live { background: var(--status-active); }
+.assets__dot--building { background: var(--status-pending); }
+.assets__dot--pending { background: #C9C9D6; }
+.assets__name { flex: 1; font-size: 13.5px; color: var(--ink); font-weight: 500; }
+.assets__link {
+  font-size: 12px;
+  color: var(--accent-deep);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.assets__link:hover { text-decoration: underline; }
+.assets__link--off { color: var(--ink-3); }
+
+/* --- משימות הלקוח --- */
+.client-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.client-tasks__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.client-tasks__row:last-child { border-bottom: 0; }
+.client-tasks__row.is-done .client-tasks__title { color: var(--ink-3); text-decoration: line-through; }
+.client-tasks__status {
+  width: 9px; height: 9px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.client-tasks__status.is-late { background: var(--status-late); }
+.client-tasks__status.is-ok { background: var(--status-active); }
+.client-tasks__title { flex: 1; font-size: 13px; color: var(--ink); display: flex; flex-direction: column; gap: 2px; }
+.client-tasks__sla { font-size: 11px; color: var(--ink-3); }
+
+/* --- יומן תקשורת --- */
+.comm-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.comm-log__row { display: flex; gap: 12px; }
+.comm-log__date {
+  flex: none;
+  width: 44px;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  padding-top: 3px;
+}
+.comm-log__body { flex: 1; min-width: 0; }
+.comm-log__body p { margin: 6px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+
+/* --- מסמכים --- */
+.docs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.docs__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.docs__row:last-child { border-bottom: 0; }
+.docs__icon {
+  flex: none;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.docs__name { flex: 1; font-size: 13.5px; color: var(--ink); }
+.docs__size { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* --- הערות --- */
+.notes {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--hover-light);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-input);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 13.5px;
+  line-height: 1.7;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.notes:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 4px var(--accent-soft); }
+.notes-saved { font-size: 12px; color: #0A7A0A; font-weight: 600; }
+
+.mini-empty {
+  margin: 0;
+  padding: 10px 0 4px;
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.7;
+}
+
+.banner__action { margin-top: 10px; align-self: flex-start; }
+
+@media (max-width: 767px) {
+  .info { grid-template-columns: 1fr; }
+  .stepper__step { min-width: 84px; }
+  .client-head__main { align-items: flex-start; }
+}

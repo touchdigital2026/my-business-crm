@@ -9,6 +9,7 @@ import TasksByAssignee from '../components/TasksByAssignee.jsx'
 import AtRiskClients from '../components/AtRiskClients.jsx'
 import SubcontractorsCard from '../components/SubcontractorsCard.jsx'
 import Leads from './Leads.jsx'
+import Clients from './Clients.jsx'
 import { IconCustomers, IconWallet, IconTrend, IconAlert } from '../components/icons.jsx'
 import { useCrm } from '../store/CrmContext.jsx'
 import { expenses } from '../data/mockData.js'
@@ -29,9 +30,18 @@ const PAGE_TITLES = {
 export default function Dashboard({ user, onLogout }) {
   const [activePage, setActivePage] = useState('dashboard')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [openClientId, setOpenClientId] = useState(null)   // כרטיס הלקוח הפתוח
 
   function handleNavigate(pageId) {
     setActivePage(pageId)
+    setMenuOpen(false)
+    setOpenClientId(null)
+  }
+
+  /* קפיצה ישירה לכרטיס לקוח – מהמרת ליד או מטבלת הסיכון בדשבורד */
+  function openClient(clientId) {
+    setOpenClientId(clientId)
+    setActivePage('clients')
     setMenuOpen(false)
   }
 
@@ -107,14 +117,18 @@ export default function Dashboard({ user, onLogout }) {
       <main className="content">
         <Topbar
           user={user}
-          breadcrumbs={['דשבורד', PAGE_TITLES[activePage]].filter(
-            (c, i, arr) => i === 0 || c !== arr[0]
-          )}
+          breadcrumbs={[
+            'דשבורד',
+            ...(activePage !== 'dashboard' ? [PAGE_TITLES[activePage]] : []),
+            ...(activePage === 'clients' && openClientId ? ['כרטיס לקוח'] : []),
+          ]}
           onOpenMenu={() => setMenuOpen(true)}
         />
 
         {activePage === 'leads' ? (
-          <Leads />
+          <Leads onOpenClient={openClient} />
+        ) : activePage === 'clients' ? (
+          <Clients selectedClientId={openClientId} onSelect={setOpenClientId} />
         ) : activePage === 'dashboard' ? (
           <div className="content__body">
             <div className="kpi-grid">
@@ -137,7 +151,7 @@ export default function Dashboard({ user, onLogout }) {
 
             {/* 13.6 – לקוחות בסיכון | 13.7 – קבלני משנה */}
             <div className="grid-2">
-              <AtRiskClients />
+              <AtRiskClients onOpenClient={openClient} onViewAll={() => handleNavigate('clients')} />
               <SubcontractorsCard />
             </div>
           </div>

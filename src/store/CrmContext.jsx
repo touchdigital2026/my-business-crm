@@ -43,16 +43,25 @@ export function CrmProvider({ children }) {
 
     const clientId = nextId('C')
 
+    const startDate = new Date()
+    const renewalDate = new Date(startDate)
+    renewalDate.setFullYear(renewalDate.getFullYear() + 1)
+
     const newClient = {
       id: clientId,
       business: lead.business,
       contact: lead.name,
       phone: lead.phone,
       email: lead.email,
+      industry: 'טרם הוגדר',        // מקורו בליד, שאינו כולל תחום עיסוק (סעיף 4.2)
+      address: 'טרם הוגדר',
       packageId: lead.packageId,
       status: 'setup',              // "בהקמה" לפי מחזור החיים בסעיף 3.1
       owner: lead.owner,
       paymentStatus: 'paid',
+      startDate: startDate.toISOString(),
+      renewalDate: renewalDate.toISOString(),
+      notes: '',
       source: lead.source,
       fromLeadId: lead.id,
     }
@@ -76,6 +85,11 @@ export function CrmProvider({ children }) {
     setTasks((prev) => [...newTasks, ...prev])
 
     return { client: newClient, tasks: newTasks }
+  }
+
+  /* עדכון שדה ההערות החופשי בכרטיס הלקוח (סעיף 3.2) */
+  function updateClientNotes(clientId, notes) {
+    setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, notes } : c)))
   }
 
   /* ----------------------------------------------------------------
@@ -127,7 +141,7 @@ export function CrmProvider({ children }) {
     }
   }, [leads, clients, tasks])
 
-  const value = { leads, clients, tasks, convertLead, ...derived }
+  const value = { leads, clients, tasks, convertLead, updateClientNotes, ...derived }
   return <CrmContext.Provider value={value}>{children}</CrmContext.Provider>
 }
 

@@ -13,7 +13,7 @@ const STATUS_LABELS = {
   lost: { label: 'אבד', tone: 'late' },
 }
 
-export default function Leads() {
+export default function Leads({ onOpenClient }) {
   const { leads, convertLead } = useCrm()
 
   const [search, setSearch] = useState('')
@@ -56,6 +56,7 @@ export default function Leads() {
          בדיוק ברגע שבו המשתמש רוצה לראות שההמרה הצליחה. */
       setStatus('all')
       setResult({
+        clientId: outcome.client.id,
         business: outcome.client.business,
         packageName: packageById[outcome.client.packageId].name,
         taskCount: outcome.tasks.length,
@@ -80,6 +81,12 @@ export default function Leads() {
               הלקוח נפתח בשלב <strong>הקמה</strong> (סעיף 3.1 באפיון), ונוצרו אוטומטית{' '}
               <span dir="ltr">{result.taskCount}</span> משימות ההקמה של חבילת {result.packageName}.
             </span>
+            <button
+              className="chip-btn banner__action"
+              onClick={() => onOpenClient?.(result.clientId)}
+            >
+              מעבר לכרטיס הלקוח החדש ←
+            </button>
           </div>
           <button className="banner__close" onClick={() => setResult(null)} aria-label="סגירת ההודעה">
             <IconClose width={16} height={16} />

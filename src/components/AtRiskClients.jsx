@@ -5,7 +5,7 @@ import { packageById, formatCurrency } from '../data/mockData.js'
    איחור בתשלום, או חוסר פעילות מעל מספר ימים מוגדר. */
 const INACTIVE_DAYS_THRESHOLD = 30
 
-export default function AtRiskClients() {
+export default function AtRiskClients({ onOpenClient, onViewAll }) {
   const { clients } = useCrm()
 
   const atRisk = clients.filter(
@@ -32,7 +32,7 @@ export default function AtRiskClients() {
             </p>
           </div>
         </div>
-        <button className="chip-btn">לכל הלקוחות</button>
+        <button className="chip-btn" onClick={onViewAll}>לכל הלקוחות</button>
       </div>
 
       <div className="table-scroll">
@@ -51,7 +51,11 @@ export default function AtRiskClients() {
               const pkg = packageById[client.packageId]
               const isOverdue = client.paymentStatus === 'overdue'
               return (
-                <tr key={client.id}>
+                <tr
+                  key={client.id}
+                  className="row-clickable"
+                  onClick={() => onOpenClient?.(client.id)}
+                >
                   <td className="cell-strong">{client.business}</td>
                   <td><span className={`pill pill--tier${pkg.tier}`}>{pkg.name}</span></td>
                   <td>
