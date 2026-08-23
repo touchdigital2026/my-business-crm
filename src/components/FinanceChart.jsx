@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCrm } from '../store/CrmContext.jsx'
-import { monthlyFinance, expenses, formatCurrency } from '../data/mockData.js'
+import { expenses, formatCurrency } from '../data/mockData.js'
 
 /* מעגל את הציר האנכי למספרים "עגולים" */
 function buildScale(values, steps = 4) {
@@ -16,8 +16,8 @@ export default function FinanceChart() {
   const [hovered, setHovered] = useState(null)
   const [asTable, setAsTable] = useState(false)
 
-  const { revenue } = useCrm()
-  const data = monthlyFinance
+  const { revenue, financeSeries } = useCrm()
+  const data = financeSeries
   const { top, ticks } = buildScale(data.flatMap((d) => [d.income, d.expense]))
   const profit = revenue.actual - expenses.total
   const margin = ((profit / revenue.actual) * 100).toFixed(1)

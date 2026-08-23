@@ -1,7 +1,8 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import {
-  initialLeads, initialClients, initialTasks,
+  initialLeads, initialClients, initialTasks, initialPayments,
   packageById, setupTasksFor, SLA, monthlyValueOf,
+  monthlyExpenses, currentMonthKey, monthLabelOf,
 } from '../data/mockData.js'
 
 /* ------------------------------------------------------------------
@@ -28,6 +29,7 @@ export function CrmProvider({ children }) {
   const [leads, setLeads] = useState(initialLeads)
   const [clients, setClients] = useState(initialClients)
   const [tasks, setTasks] = useState(initialTasks)
+  const [payments, setPayments] = useState(initialPayments)
 
   /* ----------------------------------------------------------------
      המרת ליד ללקוח – סעיף 4.3 באפיון.
@@ -102,6 +104,35 @@ export function CrmProvider({ children }) {
     )
   }
 
+  /* ----------------------------------------------------------------
+     סימון תשלום כשולם (סעיף 8).
+     אם ללקוח לא נותרו תשלומים באיחור – הוא יורד אוטומטית
+     מרשימת "לקוחות בסיכון תשלום" שבדשבורד.
+     ---------------------------------------------------------------- */
+  function markPaymentPaid(paymentId) {
+    setPayments((prev) => {
+      const next = prev.map((p) =>
+        p.id === paymentId ? { ...p, status: 'paid', paidAt: new Date().toISOString() } : p
+      )
+      const payment = prev.find((p) => p.id === paymentId)
+      if (payment) {
+        const stillOverdue = next.some(
+          (p) => p.clientId === payment.clientId && p.status === 'overdue'
+        )
+        if (!stillOverdue) {
+          setClients((cs) =>
+            cs.map((c) =>
+              c.id === payment.clientId
+                ? { ...c, paymentStatus: 'paid', overdueDays: undefined, overdueAmount: undefined }
+                : c
+            )
+          )
+        }
+      }
+      return next
+    })
+  }
+
   /* עדכון שדה ההערות החופשי בכרטיס הלקוח (סעיף 3.2) */
   function updateClientNotes(clientId, notes) {
     setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, notes } : c)))
@@ -130,7 +161,48 @@ export function CrmProvider({ children }) {
 
     const activeLeads = leads.filter((l) => l.status === 'active')
 
+    /* ---- פיננסים נגזרים מספר התשלומים (סעיף 8) ---- */
+    const curKey = currentMonthKey()
+    const monthKeys = [...new Set(payments.map((p) => p.monthKey))].sort()
+    const financeSeries = monthKeys.map((key, i) => ({
+      monthKey: key,
+      month: monthLabelOf(key).split(' ')[0],   // שם החודש בלבד
+      income: payments.filter((p) => p.monthKey === key).reduce((sum, p) => sum + p.amount, 0),
+      expense: monthlyExpenses[i] ?? monthlyExpenses[monthlyExpenses.length - 1],
+    }))
+
+    const thisMonth = payments.filter((p) => p.monthKey === curKey)
+    const sumOf = (list) => list.reduce((sum, p) => sum + p.amount, 0)
+    const overduePayments = thisMonth
+      .filter((p) => p.status === 'overdue')
+      .map((p) => ({
+        ...p,
+        daysLate: Math.max(1, Math.floor((nowMs - new Date(p.date).getTime()) / (24 * 60 * 60 * 1000))),
+      }))
+      .sort((a, b) => b.daysLate - a.daysLate)
+    const pendingPayments = thisMonth.filter((p) => p.status === 'pending')
+
+    const billedThisMonth = sumOf(thisMonth)
+    const prevKey = monthKeys[monthKeys.length - 2]
+    const billedPrevMonth = sumOf(payments.filter((p) => p.monthKey === prevKey))
+    const pct = (cur, prev) => (prev ? Math.round(((cur - prev) / prev) * 1000) / 10 : 0)
+
     return {
+      payments,
+      financeSeries,
+      paymentStats: {
+        billed: billedThisMonth,
+        collected: billedThisMonth - sumOf(overduePayments) - sumOf(pendingPayments),
+        overdueTotal: sumOf(overduePayments),
+        pendingTotal: sumOf(pendingPayments),
+        overduePayments,
+        pendingPayments,
+      },
+      revenueDelta: pct(billedThisMonth, billedPrevMonth),
+      profitDelta: pct(
+        billedThisMonth - monthlyExpenses[monthlyExpenses.length - 1],
+        billedPrevMonth - monthlyExpenses[monthlyExpenses.length - 2]
+      ),
       activeClients,
       setupClients,
       clientsByPackage: Object.keys(packageById).map((id) => ({
@@ -139,7 +211,7 @@ export function CrmProvider({ children }) {
         inSetup: setupClients.filter((c) => c.packageId === id).length,
       })),
       revenue: {
-        actual: monthlyValueOf(activeClients),
+        actual: billedThisMonth,
         forecast: monthlyValueOf(setupClients),
       },
       openTasks,
@@ -163,9 +235,9 @@ export function CrmProvider({ children }) {
         return remainingMs < thresholdMs
       },
     }
-  }, [leads, clients, tasks])
+  }, [leads, clients, tasks, payments])
 
-  const value = { leads, clients, tasks, convertLead, updateClientNotes, updateTaskStatus, ...derived }
+  const value = { leads, clients, tasks, convertLead, updateClientNotes, updateTaskStatus, markPaymentPaid, ...derived }
   return <CrmContext.Provider value={value}>{children}</CrmContext.Provider>
 }
 

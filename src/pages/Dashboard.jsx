@@ -11,6 +11,7 @@ import SubcontractorsCard from '../components/SubcontractorsCard.jsx'
 import Leads from './Leads.jsx'
 import Clients from './Clients.jsx'
 import Tasks from './Tasks.jsx'
+import Payments from './Payments.jsx'
 import { IconCustomers, IconWallet, IconTrend, IconAlert } from '../components/icons.jsx'
 import { useCrm } from '../store/CrmContext.jsx'
 import { expenses } from '../data/mockData.js'
@@ -48,7 +49,10 @@ export default function Dashboard({ user, onLogout }) {
 
   /* ארבעת המדדים הראשיים – נגזרים מהמחסן המשותף, ולכן מתעדכנים
      מיד כשממירים ליד ללקוח במסך הלידים. */
-  const { activeClients: activeList, setupClients, revenue, overdueTasks, clients } = useCrm()
+  const {
+    activeClients: activeList, setupClients, revenue, overdueTasks, clients,
+    revenueDelta, profitDelta,
+  } = useCrm()
   const activeClients = activeList.length
   const inSetup = setupClients.length
   const profit = revenue.actual - expenses.total
@@ -73,7 +77,7 @@ export default function Dashboard({ user, onLogout }) {
       label: 'הכנסה חודשית',
       value: revenue.actual,
       format: 'currency',
-      delta: 7.6,
+      delta: revenueDelta,
       goodDirection: 'up',
       trend: [52, 54, 55, 57, 58, 59, 61, 63, 64, 66, 68, 71],
       Icon: IconWallet,
@@ -84,7 +88,7 @@ export default function Dashboard({ user, onLogout }) {
       label: 'רווח החודש',
       value: profit,
       format: 'currency',
-      delta: 8.9,
+      delta: profitDelta,
       goodDirection: 'up',
       trend: [29, 31, 32, 33, 35, 35, 37, 38, 38, 39, 41, 43],
       Icon: IconTrend,
@@ -132,6 +136,8 @@ export default function Dashboard({ user, onLogout }) {
           <Clients selectedClientId={openClientId} onSelect={setOpenClientId} />
         ) : activePage === 'tasks' ? (
           <Tasks onOpenClient={openClient} />
+        ) : activePage === 'payments' ? (
+          <Payments onOpenClient={openClient} />
         ) : activePage === 'dashboard' ? (
           <div className="content__body">
             <div className="kpi-grid">

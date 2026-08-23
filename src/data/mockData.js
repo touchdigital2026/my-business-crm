@@ -100,11 +100,16 @@ export const initialClients = [
   c('C16', 'משרד עו"ד ברק', 'ניר ברק', 'עריכת דין', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
   c('C17', 'דנטל קר', 'עמית לביא', 'רפואת שיניים', 'mid', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
   c('C18', 'אירועי הזהב', 'מירי זהבי', 'הפקת אירועים', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C19', 'טק סולושנס', 'רועי בר', 'טכנולוגיה ומחשוב', 'mid', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C19', 'טק סולושנס', 'רועי בר', 'טכנולוגיה ומחשוב', 'mid', 'active', 'יעל אדרי', {
+    paymentStatus: 'paid',
+    /* לקוח חדש – הצטרף בתחילת החודש הנוכחי */
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(),
+    renewalDate: new Date(new Date().getFullYear() + 1, new Date().getMonth(), 1).toISOString(),
+  }),
   c('C20', 'סטודיו פוקוס', 'נטע אור', 'צילום והפקה', 'mid', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C21', 'אלפא ייעוץ', 'דני אלפא', 'ייעוץ עסקי', 'premium', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C21', 'אלפא ייעוץ', 'דני אלפא', 'ייעוץ עסקי', 'premium', 'active', 'יעל אדרי', { paymentStatus: 'paid', addOns: [{ name: 'פלטפורמת שיווק נוספת', price: 500 }] }),
   c('C22', 'רשת מאפה טוב', 'שלומי טוב', 'מאפיות ומזון', 'premium', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
-  c('C23', 'אוטו טרייד', 'גיא קרן', 'רכב ותחבורה', 'premium', 'active', 'יעל אדרי', { paymentStatus: 'paid' }),
+  c('C23', 'אוטו טרייד', 'גיא קרן', 'רכב ותחבורה', 'premium', 'active', 'יעל אדרי', { paymentStatus: 'paid', addOns: [{ name: 'פלטפורמת שיווק נוספת', price: 500 }] }),
   c('C24', 'מדיקל ביוטי', 'ליאור עדן', 'רפואה אסתטית', 'premium', 'active', 'אורי מזרחי', { paymentStatus: 'paid' }),
   /* לקוחות שנמצאים כרגע בשלב ההקמה – מהם מגיעה תחזית ההכנסה */
   c('C25', 'עמית תעשיות', 'ניר עמית', 'תעשייה וייצור', 'premium', 'setup', 'יעל אדרי', { paymentStatus: 'paid' }),
@@ -216,15 +221,14 @@ const todayRecurring = recurringTemplates.map((tpl) => ({
 
 export const initialTasks = [...seedTasks, ...todayRecurring]
 
-/* ===== נתונים פיננסיים (סעיפים 8–9) ===== */
-export const monthlyFinance = [
-  { month: 'מרץ', income: 52000, expense: 22400 },
-  { month: 'אפר', income: 57000, expense: 24100 },
-  { month: 'מאי', income: 59000, expense: 23800 },
-  { month: 'יונ', income: 63000, expense: 25600 },
-  { month: 'יול', income: 66000, expense: 26900 },
-  { month: 'אוג', income: 72000, expense: 28400 },
-]
+/* ===== נתונים פיננסיים (סעיפים 8–9) =====
+   ההכנסות נגזרות מספר התשלומים (data/payments.js);
+   כאן נשארות רק ההוצאות, מהישן לחדש (6 חודשים). */
+export const monthlyExpenses = [22400, 24100, 23800, 25600, 26900, 28400]
+
+export { buildPayments, monthKeyOf, monthLabelOf, currentMonthKey, PAYMENT_STATUS_LABELS, PAYMENT_KIND_LABELS, PAY_METHODS } from './payments.js'
+import { buildPayments as _build } from './payments.js'
+export const initialPayments = _build(initialClients)
 
 export const expenses = {
   total: 28400,

@@ -58,34 +58,6 @@ export const ASSET_STATUS_LABELS = {
   pending: { label: 'ממתין להקמה', tone: 'muted' },
 }
 
-/* ===== היסטוריית תשלומים (סעיף 3.2) ===== */
-const PAY_METHODS = ['הוראת קבע', 'כרטיס אשראי', 'העברה בנקאית']
-
-export function paymentsFor(client) {
-  /* לקוח בהקמה עדיין לא חויב – ההכנסה ממנו נספרת בתחזית */
-  if (client.status === 'setup') return []
-
-  const price = packageById[client.packageId].price
-  const h = hashOf(client.id)
-  const method = PAY_METHODS[h % PAY_METHODS.length]
-  const rows = []
-  for (let k = 0; k < 4; k++) {
-    const d = new Date()
-    d.setDate(1)
-    d.setMonth(d.getMonth() - k)
-    const isLatest = k === 0
-    rows.push({
-      id: `${client.id}-p${k}`,
-      month: d.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' }),
-      invoice: `INV-${1000 + ((h + k * 37) % 900)}`,
-      amount: price,
-      method,
-      status: isLatest && client.paymentStatus === 'overdue' ? 'overdue' : 'paid',
-    })
-  }
-  return rows
-}
-
 /* ===== יומן תקשורת (סעיפים 3.2 + 11) ===== */
 const LOG_TEMPLATES = [
   { type: 'שיחה', text: 'שיחת היכרות ותיאום ציפיות לתחילת העבודה' },

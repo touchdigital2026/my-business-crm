@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { useCrm } from '../store/CrmContext.jsx'
 import { packageById, formatCurrency, SLA, formatSla } from '../data/mockData.js'
 import {
-  assetsForClient, ASSET_STATUS_LABELS, paymentsFor, commLogFor, docsFor,
+  assetsForClient, ASSET_STATUS_LABELS, commLogFor, docsFor,
   LIFECYCLE_STAGES, lifecycleStageOf, CLIENT_STATUS_LABELS, formatDate,
 } from '../data/clientData.js'
+import { monthLabelOf, PAYMENT_KIND_LABELS } from '../data/mockData.js'
 
 /* ------------------------------------------------------------------
    כרטיס לקוח מלא – סעיף 3.2 באפיון.
@@ -51,7 +52,7 @@ function InfoItem({ label, value, ltr }) {
 }
 
 export default function ClientCard({ clientId, onBack }) {
-  const { clients, tasks, updateClientNotes, isOverdue } = useCrm()
+  const { clients, tasks, payments: allPayments, updateClientNotes, isOverdue } = useCrm()
   const client = clients.find((c) => c.id === clientId)
   const [notesSaved, setNotesSaved] = useState(false)
 
@@ -68,7 +69,9 @@ export default function ClientCard({ clientId, onBack }) {
   const pkg = packageById[client.packageId]
   const statusInfo = CLIENT_STATUS_LABELS[client.status]
   const assets = assetsForClient(client, tasks)
-  const payments = paymentsFor(client)
+  const payments = allPayments
+    .filter((p) => p.clientId === client.id)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
   const log = commLogFor(client)
   const docs = docsFor(client)
 
@@ -172,8 +175,9 @@ export default function ClientCard({ clientId, onBack }) {
             </div>
             {payments.length === 0 ? (
               <p className="mini-empty">
-                טרם נרשמו תשלומים – החיוב החודשי יתחיל עם סיום ההקמה,
-                ובינתיים ההכנסה מהלקוח נספרת בתחזית שבדשבורד.
+                {client.status === 'frozen'
+                  ? 'הלקוח מוקפא – החיוב החודשי מושהה עד לחידוש הפעילות.'
+                  : 'טרם נרשמו תשלומים – החיוב החודשי יתחיל עם סיום ההקמה, ובינתיים ההכנסה מהלקוח נספרת בתחזית שבדשבורד.'}
               </p>
             ) : (
               <div className="table-scroll">
@@ -184,7 +188,12 @@ export default function ClientCard({ clientId, onBack }) {
                   <tbody>
                     {payments.map((pay) => (
                       <tr key={pay.id}>
-                        <td>{pay.month}</td>
+                        <td>
+                          {monthLabelOf(pay.monthKey)}
+                          {pay.kind !== 'monthly' && (
+                            <span className="muted"> · {PAYMENT_KIND_LABELS[pay.kind]}</span>
+                          )}
+                        </td>
                         <td className="muted num" dir="ltr">{pay.invoice}</td>
                         <td className="num"><span dir="ltr">{formatCurrency(pay.amount)}</span></td>
                         <td className="muted">{pay.method}</td>

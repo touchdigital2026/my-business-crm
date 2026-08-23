@@ -21,11 +21,12 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ active, onNavigate, user, onLogout, open, onClose }) {
   /* מוני התפריט וכרטיס ההתראה נגזרים מהנתונים האמיתיים */
-  const { activeLeads, clients, openTasks, overdueTasks } = useCrm()
+  const { activeLeads, clients, openTasks, overdueTasks, paymentStats } = useCrm()
   const counts = {
     leads: activeLeads.length,
     clients: clients.length,
     tasks: openTasks.length,
+    payments: paymentStats.overduePayments.length,
   }
 
   return (
