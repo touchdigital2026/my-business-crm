@@ -1491,3 +1491,74 @@
 @media (max-width: 767px) {
   .totals--pay { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ============================================================
+   ניהול הוצאות (סעיף 9)
+   ============================================================ */
+
+.renew-note {
+  padding: 12px 16px;
+  background: var(--accent-soft);
+  border-radius: var(--radius-btn);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.renew-note strong { color: var(--accent-deep); }
+
+.bars__fill--expense { background: var(--chart-expense); }
+
+.pnl-total td {
+  border-top: 2px solid var(--card-border);
+  background: var(--hover-light);
+  font-weight: 600;
+}
+.text-late { color: #B32B2B; }
+
+/* שדות טופס על רקע בהיר */
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 14px; }
+.fld { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.form-grid .fld { margin-bottom: 0; }
+.fld__label { font-size: 12px; color: var(--ink-2); font-weight: 500; }
+.fld__input {
+  min-height: 42px;
+  padding: 9px 12px;
+  background: var(--hover-light);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-input);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.fld__input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 4px var(--accent-soft); }
+textarea.fld__input { resize: vertical; }
+
+.receipt-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  background: var(--hover-light);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-input);
+}
+.receipt-chip--table { padding: 4px 8px; display: inline-flex; }
+.receipt-chip__name {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.btn-convert--warn { background: rgba(250, 178, 25, 0.15); color: #8A6100; }
+.btn-convert--warn:hover { background: var(--status-pending); color: #fff; box-shadow: none; }
+
+.btn-add { height: 42px; margin-inline-start: auto; }
+
+@media (max-width: 767px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .btn-add { width: 100%; margin-inline-start: 0; }
+}

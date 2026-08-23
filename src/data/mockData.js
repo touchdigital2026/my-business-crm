@@ -222,26 +222,14 @@ const todayRecurring = recurringTemplates.map((tpl) => ({
 export const initialTasks = [...seedTasks, ...todayRecurring]
 
 /* ===== נתונים פיננסיים (סעיפים 8–9) =====
-   ההכנסות נגזרות מספר התשלומים (data/payments.js);
-   כאן נשארות רק ההוצאות, מהישן לחדש (6 חודשים). */
-export const monthlyExpenses = [22400, 24100, 23800, 25600, 26900, 28400]
-
+   ההכנסות נגזרות מספר התשלומים (data/payments.js)
+   וההוצאות מספר ההוצאות (data/expenses.js). */
 export { buildPayments, monthKeyOf, monthLabelOf, currentMonthKey, PAYMENT_STATUS_LABELS, PAYMENT_KIND_LABELS, PAY_METHODS } from './payments.js'
+export { EXPENSE_CATEGORIES, VAT_RATE, preVatOf } from './expenses.js'
 import { buildPayments as _build } from './payments.js'
+import { buildExpenses as _buildExp } from './expenses.js'
 export const initialPayments = _build(initialClients)
-
-export const expenses = {
-  total: 28400,
-  previousMonth: 26900,
-  byCategory: [
-    { name: 'תשלום לקבלני משנה', amount: 13200 },
-    { name: 'מינויי תוכנה ואחסון', amount: 5400 },
-    { name: 'שירותי VRSL', amount: 3800 },
-    { name: 'שיווק', amount: 3100 },
-    { name: 'ציוד', amount: 1900 },
-    { name: 'אחר', amount: 1000 },
-  ],
-}
+export const initialExpenses = _buildExp()
 
 /* ===== קבלני משנה (סעיף 13.7) ===== */
 export const subcontractors = [

@@ -1,8 +1,8 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import {
-  initialLeads, initialClients, initialTasks, initialPayments,
+  initialLeads, initialClients, initialTasks, initialPayments, initialExpenses,
   packageById, setupTasksFor, SLA, monthlyValueOf,
-  monthlyExpenses, currentMonthKey, monthLabelOf,
+  EXPENSE_CATEGORIES, currentMonthKey, monthLabelOf,
 } from '../data/mockData.js'
 
 /* ------------------------------------------------------------------
@@ -30,6 +30,8 @@ export function CrmProvider({ children }) {
   const [clients, setClients] = useState(initialClients)
   const [tasks, setTasks] = useState(initialTasks)
   const [payments, setPayments] = useState(initialPayments)
+  const [expenses, setExpenses] = useState(initialExpenses)
+  const [expenseCategories, setExpenseCategories] = useState(EXPENSE_CATEGORIES)
 
   /* ----------------------------------------------------------------
      המרת ליד ללקוח – סעיף 4.3 באפיון.
@@ -133,6 +135,35 @@ export function CrmProvider({ children }) {
     })
   }
 
+  /* ----------------------------------------------------------------
+     רישום הוצאה חדשה (סעיף 9.1) */
+  function addExpense(record) {
+    const entry = {
+      id: nextId('E'),
+      monthKey: currentMonthKey(),
+      date: record.date || new Date().toISOString(),
+      notes: '',
+      receipt: null,
+      ...record,
+    }
+    setExpenses((prev) => [entry, ...prev])
+    return entry
+  }
+
+  /* הוספת קטגוריית הוצאה חדשה דרך הממשק (סעיף 9.1) */
+  function addExpenseCategory(name) {
+    const id = 'custom-' + nextId('cat')
+    setExpenseCategories((prev) => [...prev, { id, name }])
+    return id
+  }
+
+  /* צירוף קובץ קבלה/חשבונית לרשומת הוצאה (סעיף 9.2) */
+  function attachReceipt(expenseId, fileMeta) {
+    setExpenses((prev) =>
+      prev.map((e) => (e.id === expenseId ? { ...e, receipt: fileMeta } : e))
+    )
+  }
+
   /* עדכון שדה ההערות החופשי בכרטיס הלקוח (סעיף 3.2) */
   function updateClientNotes(clientId, notes) {
     setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, notes } : c)))
@@ -164,11 +195,13 @@ export function CrmProvider({ children }) {
     /* ---- פיננסים נגזרים מספר התשלומים (סעיף 8) ---- */
     const curKey = currentMonthKey()
     const monthKeys = [...new Set(payments.map((p) => p.monthKey))].sort()
-    const financeSeries = monthKeys.map((key, i) => ({
+    const expenseByMonth = {}
+    for (const e of expenses) expenseByMonth[e.monthKey] = (expenseByMonth[e.monthKey] || 0) + e.amount
+    const financeSeries = monthKeys.map((key) => ({
       monthKey: key,
       month: monthLabelOf(key).split(' ')[0],   // שם החודש בלבד
       income: payments.filter((p) => p.monthKey === key).reduce((sum, p) => sum + p.amount, 0),
-      expense: monthlyExpenses[i] ?? monthlyExpenses[monthlyExpenses.length - 1],
+      expense: expenseByMonth[key] || 0,
     }))
 
     const thisMonth = payments.filter((p) => p.monthKey === curKey)
@@ -200,9 +233,28 @@ export function CrmProvider({ children }) {
       },
       revenueDelta: pct(billedThisMonth, billedPrevMonth),
       profitDelta: pct(
-        billedThisMonth - monthlyExpenses[monthlyExpenses.length - 1],
-        billedPrevMonth - monthlyExpenses[monthlyExpenses.length - 2]
+        billedThisMonth - (expenseByMonth[curKey] || 0),
+        billedPrevMonth - (expenseByMonth[prevKey] || 0)
       ),
+      /* ---- הוצאות (סעיף 9) ---- */
+      expensesThisMonth: expenseByMonth[curKey] || 0,
+      expenseStats: {
+        total: expenseByMonth[curKey] || 0,
+        recurringTotal: expenses
+          .filter((e) => e.monthKey === curKey && e.recurring)
+          .reduce((sum, e) => sum + e.amount, 0),
+        recurringCount: expenses.filter((e) => e.monthKey === curKey && e.recurring).length,
+        missingReceipts: expenses.filter((e) => e.monthKey === curKey && !e.receipt).length,
+        byCategory: expenseCategories
+          .map((cat) => ({
+            ...cat,
+            amount: expenses
+              .filter((e) => e.monthKey === curKey && e.categoryId === cat.id)
+              .reduce((sum, e) => sum + e.amount, 0),
+          }))
+          .filter((cat) => cat.amount > 0)
+          .sort((a, b) => b.amount - a.amount),
+      },
       activeClients,
       setupClients,
       clientsByPackage: Object.keys(packageById).map((id) => ({
@@ -235,9 +287,14 @@ export function CrmProvider({ children }) {
         return remainingMs < thresholdMs
       },
     }
-  }, [leads, clients, tasks, payments])
+  }, [leads, clients, tasks, payments, expenses, expenseCategories])
 
-  const value = { leads, clients, tasks, convertLead, updateClientNotes, updateTaskStatus, markPaymentPaid, ...derived }
+  const value = {
+    leads, clients, tasks, expenses, expenseCategories,
+    convertLead, updateClientNotes, updateTaskStatus, markPaymentPaid,
+    addExpense, addExpenseCategory, attachReceipt,
+    ...derived,
+  }
   return <CrmContext.Provider value={value}>{children}</CrmContext.Provider>
 }
 

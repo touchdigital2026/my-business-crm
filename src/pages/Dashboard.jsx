@@ -12,9 +12,9 @@ import Leads from './Leads.jsx'
 import Clients from './Clients.jsx'
 import Tasks from './Tasks.jsx'
 import Payments from './Payments.jsx'
+import Expenses from './Expenses.jsx'
 import { IconCustomers, IconWallet, IconTrend, IconAlert } from '../components/icons.jsx'
 import { useCrm } from '../store/CrmContext.jsx'
-import { expenses } from '../data/mockData.js'
 
 const PAGE_TITLES = {
   dashboard: 'דשבורד',
@@ -51,11 +51,11 @@ export default function Dashboard({ user, onLogout }) {
      מיד כשממירים ליד ללקוח במסך הלידים. */
   const {
     activeClients: activeList, setupClients, revenue, overdueTasks, clients,
-    revenueDelta, profitDelta,
+    revenueDelta, profitDelta, expensesThisMonth,
   } = useCrm()
   const activeClients = activeList.length
   const inSetup = setupClients.length
-  const profit = revenue.actual - expenses.total
+  const profit = revenue.actual - expensesThisMonth
   const atRiskCount = clients.filter(
     (c) => c.paymentStatus === 'overdue' || (c.inactiveDays || 0) > 30
   ).length
@@ -92,7 +92,7 @@ export default function Dashboard({ user, onLogout }) {
       goodDirection: 'up',
       trend: [29, 31, 32, 33, 35, 35, 37, 38, 38, 39, 41, 43],
       Icon: IconTrend,
-      note: `הוצאות ₪${expenses.total.toLocaleString('he-IL')}`,
+      note: `הוצאות ₪${expensesThisMonth.toLocaleString('he-IL')}`,
     },
     {
       id: 'overdue',
@@ -138,6 +138,8 @@ export default function Dashboard({ user, onLogout }) {
           <Tasks onOpenClient={openClient} />
         ) : activePage === 'payments' ? (
           <Payments onOpenClient={openClient} />
+        ) : activePage === 'expenses' ? (
+          <Expenses user={user} />
         ) : activePage === 'dashboard' ? (
           <div className="content__body">
             <div className="kpi-grid">
