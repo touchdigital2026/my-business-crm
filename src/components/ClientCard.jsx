@@ -227,6 +227,8 @@ export default function ClientCard({ clientId, onBack }) {
                     </span>
                     {isOverdue(task) ? (
                       <span className="pill pill--late">באיחור</span>
+                    ) : task.status === 'inprogress' ? (
+                      <span className="pill pill--pending">בביצוע</span>
                     ) : (
                       <span className="pill pill--secondary">פתוחה</span>
                     )}

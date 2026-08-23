@@ -10,6 +10,7 @@ import AtRiskClients from '../components/AtRiskClients.jsx'
 import SubcontractorsCard from '../components/SubcontractorsCard.jsx'
 import Leads from './Leads.jsx'
 import Clients from './Clients.jsx'
+import Tasks from './Tasks.jsx'
 import { IconCustomers, IconWallet, IconTrend, IconAlert } from '../components/icons.jsx'
 import { useCrm } from '../store/CrmContext.jsx'
 import { expenses } from '../data/mockData.js'
@@ -129,6 +130,8 @@ export default function Dashboard({ user, onLogout }) {
           <Leads onOpenClient={openClient} />
         ) : activePage === 'clients' ? (
           <Clients selectedClientId={openClientId} onSelect={setOpenClientId} />
+        ) : activePage === 'tasks' ? (
+          <Tasks onOpenClient={openClient} />
         ) : activePage === 'dashboard' ? (
           <div className="content__body">
             <div className="kpi-grid">

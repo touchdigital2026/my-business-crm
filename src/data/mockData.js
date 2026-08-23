@@ -3,7 +3,7 @@
    הכל כתוב כאן במקום אחד, כדי שיהיה קל להחליף בהמשך בנתונים
    אמיתיים מהשרת בלי לגעת בעיצוב או ברכיבים.
    ------------------------------------------------------------------ */
-export { packages, packageById, SLA, setupTasksFor, formatSla } from './packages.js'
+export { packages, packageById, SLA, setupTasksFor, formatSla, slaLabelOf } from './packages.js'
 import { packageById } from './packages.js'
 
 /* ===== שלבי הפייפליין, לפי סעיף 4.1 באפיון ===== */
@@ -115,40 +115,106 @@ export const initialClients = [
   c('C29', 'סלון ורד', 'ורד יוקרה', 'עיצוב שיער', 'mid', 'frozen', 'יעל אדרי', { paymentStatus: 'paid', frozenReason: 'חוסר שביעות רצון – בתהליך שימור' }),
 ]
 
-/* ===== משימות =====
+/* ===== משימות (סעיף 6) =====
+   כל משימה כוללת את השדות מסעיף 6.3: תיאור, לקוח משויך, אחראי,
+   תאריך פתיחה, יעד SLA, תאריך יעד, סטטוס ועדיפות.
    תאריך היעד נשמר כזמן מוחלט, כך שהמערכת מסמנת "באיחור" אוטומטית
-   ברגע שהוא חלף – בדיוק כפי שדורש סעיף 6.3. */
+   ברגע שהוא חלף.
+
+   type: setup = משימת הקמה חד-פעמית | maintenance = תחזוקה שוטפת */
 const now = Date.now()
-const inDays = (d) => new Date(now + d * 24 * 60 * 60 * 1000).toISOString()
+const DAY_MS = 24 * 60 * 60 * 1000
+const inDays = (d) => new Date(now + d * DAY_MS).toISOString()
+const daysAgo = (d) => new Date(now - d * DAY_MS).toISOString()
 
-const t = (id, title, clientId, assignee, dueInDays, status = 'open') =>
-  ({ id, title, clientId, assignee, dueAt: inDays(dueInDays), status, source: 'seed' })
+const t = (id, title, clientId, assignee, opts) => ({
+  id, title, clientId, assignee,
+  type: opts.type || 'maintenance',
+  slaKey: opts.sla || null,
+  priority: opts.priority || 'normal',
+  status: opts.status || 'open',
+  openedAt: daysAgo(opts.opened ?? 3),
+  dueAt: inDays(opts.due),
+  recurring: opts.recurring || null,
+  source: 'seed',
+})
 
-export const initialTasks = [
-  t('T01', 'בניית אתר מלא', 'C25', 'יעל אדרי', -2),
-  t('T02', 'הקמת שיווק אורגני בגוגל ו-AI', 'C25', 'יעל אדרי', -1),
-  t('T03', 'בניית דף נחיתה (פרימיום)', 'C25', 'יעל אדרי', 3),
-  t('T04', 'פתיחת כרטיס גוגל עסקי', 'C25', 'יעל אדרי', 4),
-  t('T05', 'הקמת CRM ללקוח', 'C26', 'יעל אדרי', 6),
-  t('T06', 'מייקאובר, יצירת גאנט והעלאת פוסטים', 'C26', 'יעל אדרי', 2),
-  t('T07', 'הקמת בוט וואטסאפ', 'C27', 'אורי מזרחי', 1),
-  t('T08', 'הרמת קמפיין שיווק ממומן', 'C27', 'אורי מזרחי', 2),
-  t('T09', 'פתיחת עמודים עסקיים', 'C27', 'אורי מזרחי', 3),
-  t('T10', 'הקמת מספר וירטואלי', 'C28', 'אורי מזרחי', 5),
-  t('T11', 'עדכון קמפיין גוגל', 'C05', 'רון לוי', -3),
-  t('T12', 'עיצוב מחדש של דף הנחיתה', 'C14', 'רון לוי', 2),
-  t('T13', 'מייקאובר לעמוד האינסטגרם', 'C17', 'רון לוי', 4),
-  t('T14', 'בניית ביו שיווקי חדש', 'C21', 'רון לוי', 6),
-  t('T15', 'עריכת סרטון תדמית', 'C22', 'מאיה בר', -4),
-  t('T16', 'צילום ועריכת UGC', 'C23', 'מאיה בר', -1),
-  t('T17', 'הפקת ריל לקמפיין', 'C24', 'מאיה בר', 3),
-  t('T18', 'ניהול סושיאל שבועי', 'C18', 'אלון גל', 1),
-  t('T19', 'סבב תיאום ציפיות', 'C02', 'יעל אדרי', 5),
-  t('T20', 'בדיקת ביצועי קמפיין', 'C15', 'אורי מזרחי', 7),
-  t('T21', 'הקמת בוט וואטסאפ', 'C28', 'אורי מזרחי', -1, 'done'),
-  t('T22', 'פתיחת עמודים עסקיים', 'C26', 'יעל אדרי', -2, 'done'),
-  t('T23', 'הרמת קמפיין שיווק ממומן', 'C25', 'יעל אדרי', -3, 'done'),
+const seedTasks = [
+  /* --- משימות הקמה (6.1) של הלקוחות שנמצאים בשלב ההקמה --- */
+  t('T01', 'בניית אתר מלא', 'C25', 'יעל אדרי', { type: 'setup', sla: 'website', due: -2, opened: 23, priority: 'high' }),
+  t('T02', 'הקמת שיווק אורגני בגוגל ו-AI', 'C25', 'יעל אדרי', { type: 'setup', sla: 'campaign', due: -1, opened: 8 }),
+  t('T03', 'בניית דף נחיתה (פרימיום)', 'C25', 'יעל אדרי', { type: 'setup', sla: 'landingPremium', due: 3, opened: 2, status: 'inprogress' }),
+  t('T04', 'פתיחת כרטיס גוגל עסקי', 'C25', 'יעל אדרי', { type: 'setup', sla: 'businessPage', due: 4, opened: 1 }),
+  t('T05', 'הקמת CRM ללקוח', 'C26', 'יעל אדרי', { type: 'setup', sla: 'software', due: 6, opened: 7 }),
+  t('T06', 'מייקאובר, יצירת גאנט והעלאת פוסטים', 'C26', 'יעל אדרי', { type: 'setup', sla: 'gantt', due: 2, opened: 1 }),
+  t('T07', 'הקמת בוט וואטסאפ', 'C27', 'אורי מזרחי', { type: 'setup', sla: 'whatsappBot', due: 1, opened: 1, status: 'inprogress' }),
+  t('T08', 'הרמת קמפיין שיווק ממומן', 'C27', 'אורי מזרחי', { type: 'setup', sla: 'campaign', due: 0.07, opened: 1, priority: 'high' }),
+  t('T09', 'פתיחת עמודים עסקיים', 'C27', 'אורי מזרחי', { type: 'setup', sla: 'businessPage', due: 3, opened: 1 }),
+  t('T10', 'הקמת מספר וירטואלי', 'C28', 'אורי מזרחי', { type: 'setup', sla: 'businessPage', due: 5, opened: 2 }),
+  /* --- עבודה שוטפת מול לקוחות פעילים --- */
+  t('T11', 'עדכון קמפיין גוגל', 'C05', 'רון לוי', { due: -3, opened: 6 }),
+  t('T12', 'עיצוב מחדש של דף הנחיתה', 'C14', 'רון לוי', { due: 2, opened: 2, status: 'inprogress' }),
+  t('T13', 'מייקאובר לעמוד האינסטגרם', 'C17', 'רון לוי', { due: 4, opened: 1 }),
+  t('T14', 'בניית ביו שיווקי חדש', 'C21', 'רון לוי', { due: 6, opened: 1 }),
+  t('T15', 'עריכת סרטון תדמית', 'C22', 'מאיה בר', { due: -4, opened: 9, priority: 'high' }),
+  t('T16', 'צילום ועריכת UGC', 'C23', 'מאיה בר', { due: -1, opened: 4, status: 'inprogress' }),
+  t('T17', 'הפקת ריל לקמפיין', 'C24', 'מאיה בר', { due: 3, opened: 1 }),
+  t('T18', 'ניהול סושיאל שבועי', 'C18', 'אלון גל', { due: 1, opened: 2, recurring: 'שבועי' }),
+  t('T19', 'סבב תיאום ציפיות', 'C02', 'יעל אדרי', { due: 5, opened: 1, priority: 'low' }),
+  t('T20', 'בדיקת ביצועי קמפיין', 'C15', 'אורי מזרחי', { due: 7, opened: 1 }),
+  /* --- משימות שהושלמו --- */
+  t('T21', 'הקמת בוט וואטסאפ', 'C28', 'אורי מזרחי', { type: 'setup', sla: 'whatsappBot', due: -1, opened: 3, status: 'done' }),
+  t('T22', 'פתיחת עמודים עסקיים', 'C26', 'יעל אדרי', { type: 'setup', sla: 'businessPage', due: -2, opened: 4, status: 'done' }),
+  t('T23', 'הרמת קמפיין שיווק ממומן', 'C25', 'יעל אדרי', { type: 'setup', sla: 'campaign', due: -3, opened: 5, status: 'done' }),
 ]
+
+/* ------------------------------------------------------------------
+   משימות תחזוקה חוזרות (סעיף 6.3):
+   "אפשרות להגדיר משימות חוזרות עבור תחזוקה שוטפת, שנפתחות
+    אוטומטית מדי יום/שבוע".
+
+   התבניות מוגדרות כאן, והמופע של היום נוצר אוטומטית בכל טעינה –
+   משימה יומית עם יעד עד סוף היום, ושבועית עד סוף שבוע העבודה.
+   כשנחבר שרת, אותן תבניות ירוצו בתזמון אמיתי בצד השרת.
+   ------------------------------------------------------------------ */
+export const recurringTemplates = [
+  { key: 'paid-C01', title: 'תחזוקת שיווק ממומן', clientId: 'C01', assignee: 'אלון גל', sla: 'paidMaint', freq: 'יומי' },
+  { key: 'paid-C21', title: 'תחזוקת שיווק ממומן', clientId: 'C21', assignee: 'יעל אדרי', sla: 'paidMaint', freq: 'יומי' },
+  { key: 'organic-C22', title: 'תחזוקת שיווק אורגני', clientId: 'C22', assignee: 'אורי מזרחי', sla: 'organicMaint', freq: 'יומי' },
+  { key: 'gantt-C14', title: 'יצירת גאנט + העלאת פוסטים', clientId: 'C14', assignee: 'אלון גל', sla: 'gantt', freq: 'שבועי' },
+]
+
+function endOfToday() {
+  const d = new Date()
+  d.setHours(23, 59, 0, 0)
+  return d.toISOString()
+}
+
+function endOfWorkWeek() {
+  const d = new Date()
+  d.setDate(d.getDate() + ((5 - d.getDay() + 7) % 7))   // יום שישי הקרוב
+  d.setHours(23, 59, 0, 0)
+  return d.toISOString()
+}
+
+const todayKey = new Date().toISOString().slice(0, 10)
+
+const todayRecurring = recurringTemplates.map((tpl) => ({
+  id: `R-${tpl.key}-${todayKey}`,
+  title: tpl.title,
+  clientId: tpl.clientId,
+  assignee: tpl.assignee,
+  type: 'maintenance',
+  slaKey: tpl.sla,
+  priority: 'normal',
+  status: 'open',
+  openedAt: new Date(new Date().setHours(8, 0, 0, 0)).toISOString(),
+  dueAt: tpl.freq === 'יומי' ? endOfToday() : endOfWorkWeek(),
+  recurring: tpl.freq,
+  source: 'recurring',
+}))
+
+export const initialTasks = [...seedTasks, ...todayRecurring]
 
 /* ===== נתונים פיננסיים (סעיפים 8–9) ===== */
 export const monthlyFinance = [

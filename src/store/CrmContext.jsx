@@ -71,10 +71,14 @@ export function CrmProvider({ children }) {
       title: template.title,
       clientId,
       assignee: lead.owner,
+      type: 'setup',
+      priority: 'normal',
+      openedAt: new Date().toISOString(),
       dueAt: dueDateFor(template.sla),
       slaKey: template.sla,
       slaAssumed: Boolean(template.slaAssumed),
       status: 'open',
+      recurring: null,
       source: 'setup',              // נוצרה אוטומטית בהמרה
     }))
 
@@ -85,6 +89,17 @@ export function CrmProvider({ children }) {
     setTasks((prev) => [...newTasks, ...prev])
 
     return { client: newClient, tasks: newTasks }
+  }
+
+  /* קידום משימה בלוח הקנבן: פתוח ← בביצוע ← הושלם (סעיף 6.3) */
+  function updateTaskStatus(taskId, status) {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId
+          ? { ...t, status, completedAt: status === 'done' ? new Date().toISOString() : undefined }
+          : t
+      )
+    )
   }
 
   /* עדכון שדה ההערות החופשי בכרטיס הלקוח (סעיף 3.2) */
@@ -138,10 +153,19 @@ export function CrmProvider({ children }) {
       wonLeads: leads.filter((l) => l.status === 'won'),
       lostLeads: leads.filter((l) => l.status === 'lost'),
       isOverdue,
+      /* "מתקרבת ליעד" (סעיף 6.3): נותר פחות מרבע מיעד ה-SLA,
+         ולפחות שעתיים – כדי שגם משימות ארוכות יקבלו התראה בזמן */
+      isDueSoon: (t) => {
+        if (t.status === 'done' || isOverdue(t)) return false
+        const remainingMs = new Date(t.dueAt).getTime() - nowMs
+        const slaMinutes = t.slaKey ? SLA[t.slaKey].minutes : 24 * 60
+        const thresholdMs = Math.max(slaMinutes * 0.25, 120) * 60 * 1000
+        return remainingMs < thresholdMs
+      },
     }
   }, [leads, clients, tasks])
 
-  const value = { leads, clients, tasks, convertLead, updateClientNotes, ...derived }
+  const value = { leads, clients, tasks, convertLead, updateClientNotes, updateTaskStatus, ...derived }
   return <CrmContext.Provider value={value}>{children}</CrmContext.Provider>
 }
 

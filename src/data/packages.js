@@ -21,6 +21,9 @@ export const SLA = {
   campaign:       { label: 'הרמת קמפיין מאפס',           minutes: 2 * HOUR },
   businessPage:   { label: 'פתיחת עמוד עסקי',            minutes: 15 * MINUTE },
   gantt:          { label: 'יצירת גאנט + העלאת פוסטים',  minutes: 30 * MINUTE },
+  /* משימות התחזוקה השוטפת – יעד זמן יומי (סעיף 6.2) */
+  paidMaint:      { label: 'תחזוקת שיווק ממומן',          minutes: 20 * MINUTE, perDay: true },
+  organicMaint:   { label: 'תחזוקת שיווק אורגני',         minutes: 10 * MINUTE, perDay: true },
 }
 
 /* שלוש החבילות, לפי הטבלה בסעיף 5 */
@@ -91,6 +94,13 @@ export function setupTasksFor(packageId) {
   if (packageId === 'standard') return [...STANDARD_TASKS]
   if (packageId === 'mid') return [...STANDARD_TASKS, landingTask('mid'), ...MID_TASKS]
   return [...STANDARD_TASKS, landingTask('premium'), ...MID_TASKS, ...PREMIUM_TASKS]
+}
+
+/* תווית יעד ה-SLA של משימה, כולל סימון "ביום" למשימות תחזוקה יומיות */
+export function slaLabelOf(slaKey) {
+  const entry = SLA[slaKey]
+  if (!entry) return null
+  return formatSla(entry.minutes) + (entry.perDay ? ' ביום' : '')
 }
 
 /* ממיר יעד זמן בדקות לתיאור קריא בעברית */
