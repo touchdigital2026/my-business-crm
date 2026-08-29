@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import {
   initialLeads, initialClients, initialTasks, initialPayments, initialExpenses,
+  initialDocuments,
   packageById, setupTasksFor, SLA, monthlyValueOf,
   EXPENSE_CATEGORIES, currentMonthKey, monthLabelOf,
 } from '../data/mockData.js'
@@ -32,6 +33,7 @@ export function CrmProvider({ children }) {
   const [payments, setPayments] = useState(initialPayments)
   const [expenses, setExpenses] = useState(initialExpenses)
   const [expenseCategories, setExpenseCategories] = useState(EXPENSE_CATEGORIES)
+  const [documents, setDocuments] = useState(initialDocuments)
 
   /* ----------------------------------------------------------------
      המרת ליד ללקוח – סעיף 4.3 באפיון.
@@ -91,6 +93,20 @@ export function CrmProvider({ children }) {
     )
     setClients((prev) => [newClient, ...prev])
     setTasks((prev) => [...newTasks, ...prev])
+    /* מסמך ההסכם נפתח אוטומטית בתיקיית החוזים ומשויך ללקוח (סעיף 10) */
+    setDocuments((prev) => [{
+      id: nextId('D'),
+      name: `הסכם התקשרות – ${lead.business}.pdf`,
+      kind: 'PDF',
+      sizeLabel: '180KB',
+      folderId: 'contracts',
+      clientId,
+      tags: ['הסכם'],
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: 'מנהל המערכת',
+      visibility: 'מנהלי-על',
+      versions: [],
+    }, ...prev])
 
     return { client: newClient, tasks: newTasks }
   }
@@ -161,6 +177,43 @@ export function CrmProvider({ children }) {
   function attachReceipt(expenseId, fileMeta) {
     setExpenses((prev) =>
       prev.map((e) => (e.id === expenseId ? { ...e, receipt: fileMeta } : e))
+    )
+  }
+
+  /* העלאת מסמך חדש למאגר (סעיף 10) */
+  function addDocument(meta) {
+    const doc = {
+      id: nextId('D'),
+      uploadedAt: new Date().toISOString(),
+      clientId: null,
+      tags: [],
+      visibility: 'מנהלי-על',
+      versions: [],
+      ...meta,
+    }
+    setDocuments((prev) => [doc, ...prev])
+    return doc
+  }
+
+  /* החלפת קובץ בגרסה חדשה – הגרסה הקודמת נשמרת ולא נמחקת (סעיף 10) */
+  function replaceDocument(docId, fileMeta, uploadedBy) {
+    setDocuments((prev) =>
+      prev.map((doc) => {
+        if (doc.id !== docId) return doc
+        const previous = {
+          name: doc.name,
+          sizeLabel: doc.sizeLabel,
+          uploadedAt: doc.uploadedAt,
+          uploadedBy: doc.uploadedBy,
+        }
+        return {
+          ...doc,
+          ...fileMeta,
+          uploadedAt: new Date().toISOString(),
+          uploadedBy,
+          versions: [previous, ...doc.versions],
+        }
+      })
     )
   }
 
@@ -236,6 +289,32 @@ export function CrmProvider({ children }) {
         billedThisMonth - (expenseByMonth[curKey] || 0),
         billedPrevMonth - (expenseByMonth[prevKey] || 0)
       ),
+      /* ---- מסמכים (סעיף 10): המאגר + קבלות ההוצאות שנגזרות אליו ---- */
+      allDocuments: [
+        ...documents,
+        ...expenses
+          .filter((e) => e.receipt)
+          .map((e) => ({
+            id: `DOC-${e.id}`,
+            name: e.receipt.name,
+            kind: e.receipt.kind,
+            sizeLabel: e.receipt.size || '—',
+            folderId: 'receipts',
+            clientId: null,
+            tags: [
+              (EXPENSE_CATEGORIES.find((c) => c.id === e.categoryId) ||
+                expenseCategories.find((c) => c.id === e.categoryId))?.name || 'הוצאה',
+              e.vendor,
+            ],
+            uploadedAt: e.date,
+            uploadedBy: e.enteredBy,
+            visibility: 'מנהלי-על',
+            url: e.receipt.url,
+            versions: [],
+            derived: true,           // מנוהל דרך מודול ההוצאות
+          })),
+      ].sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)),
+
       /* ---- הוצאות (סעיף 9) ---- */
       expensesThisMonth: expenseByMonth[curKey] || 0,
       expenseStats: {
@@ -287,12 +366,13 @@ export function CrmProvider({ children }) {
         return remainingMs < thresholdMs
       },
     }
-  }, [leads, clients, tasks, payments, expenses, expenseCategories])
+  }, [leads, clients, tasks, payments, expenses, expenseCategories, documents])
 
   const value = {
     leads, clients, tasks, expenses, expenseCategories,
     convertLead, updateClientNotes, updateTaskStatus, markPaymentPaid,
     addExpense, addExpenseCategory, attachReceipt,
+    addDocument, replaceDocument,
     ...derived,
   }
   return <CrmContext.Provider value={value}>{children}</CrmContext.Provider>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useCrm } from '../store/CrmContext.jsx'
 import { packageById, formatCurrency, SLA, formatSla } from '../data/mockData.js'
 import {
-  assetsForClient, ASSET_STATUS_LABELS, commLogFor, docsFor,
+  assetsForClient, ASSET_STATUS_LABELS, commLogFor,
   LIFECYCLE_STAGES, lifecycleStageOf, CLIENT_STATUS_LABELS, formatDate,
 } from '../data/clientData.js'
 import { monthLabelOf, PAYMENT_KIND_LABELS } from '../data/mockData.js'
@@ -52,7 +52,7 @@ function InfoItem({ label, value, ltr }) {
 }
 
 export default function ClientCard({ clientId, onBack }) {
-  const { clients, tasks, payments: allPayments, updateClientNotes, isOverdue } = useCrm()
+  const { clients, tasks, payments: allPayments, allDocuments, updateClientNotes, isOverdue } = useCrm()
   const client = clients.find((c) => c.id === clientId)
   const [notesSaved, setNotesSaved] = useState(false)
 
@@ -73,7 +73,7 @@ export default function ClientCard({ clientId, onBack }) {
     .filter((p) => p.clientId === client.id)
     .sort((a, b) => new Date(b.date) - new Date(a.date))
   const log = commLogFor(client)
-  const docs = docsFor(client)
+  const docs = allDocuments.filter((d) => d.clientId === client.id)
 
   const clientTasks = tasks.filter((t) => t.clientId === client.id)
   const openTasks = clientTasks.filter((t) => t.status !== 'done')
@@ -278,7 +278,7 @@ export default function ClientCard({ clientId, onBack }) {
                 <li key={doc.id} className="docs__row">
                   <span className="docs__icon">{doc.kind}</span>
                   <span className="docs__name">{doc.name}</span>
-                  <span className="docs__size" dir="ltr">{doc.size}</span>
+                  <span className="docs__size" dir="ltr">{doc.sizeLabel}</span>
                 </li>
               ))}
             </ul>

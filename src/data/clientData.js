@@ -90,20 +90,6 @@ export function commLogFor(client) {
   })
 }
 
-/* ===== מסמכים וקבצים (סעיפים 3.2 + 10) ===== */
-export function docsFor(client) {
-  const h = hashOf(client.id)
-  const base = [
-    { name: 'הסכם התקשרות.pdf', kind: 'PDF', size: `${180 + (h % 90)}KB` },
-  ]
-  if (client.fromLeadId) return base.map((d, i) => ({ ...d, id: `${client.id}-d${i}` }))
-  return [
-    ...base,
-    { name: 'חשבונית אחרונה.pdf', kind: 'PDF', size: `${60 + (h % 40)}KB` },
-    { name: 'קבצי מיתוג.zip', kind: 'ZIP', size: `${4 + (h % 14)}MB` },
-  ].map((d, i) => ({ ...d, id: `${client.id}-d${i}` }))
-}
-
 /* ===== מחזור החיים של הלקוח (סעיף 3.1) ===== */
 export const LIFECYCLE_STAGES = [
   { id: 1, label: 'ליד' },

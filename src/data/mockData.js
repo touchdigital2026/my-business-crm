@@ -226,10 +226,13 @@ export const initialTasks = [...seedTasks, ...todayRecurring]
    וההוצאות מספר ההוצאות (data/expenses.js). */
 export { buildPayments, monthKeyOf, monthLabelOf, currentMonthKey, PAYMENT_STATUS_LABELS, PAYMENT_KIND_LABELS, PAY_METHODS } from './payments.js'
 export { EXPENSE_CATEGORIES, VAT_RATE, preVatOf } from './expenses.js'
+export { DOC_FOLDERS, folderById, kindOfFile } from './documents.js'
 import { buildPayments as _build } from './payments.js'
 import { buildExpenses as _buildExp } from './expenses.js'
+import { buildDocuments as _buildDocs } from './documents.js'
 export const initialPayments = _build(initialClients)
 export const initialExpenses = _buildExp()
+export const initialDocuments = _buildDocs(initialClients)
 
 /* ===== קבלני משנה (סעיף 13.7) ===== */
 export const subcontractors = [
