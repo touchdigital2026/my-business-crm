@@ -180,6 +180,56 @@ export function CrmProvider({ children }) {
     )
   }
 
+  /* ----------------------------------------------------------------
+     הקצאת משימה לקבלן משנה (סעיף 7).
+     המשימה נכנסת ללוח הקנבן הרגיל, משויכת לקבלן ולתעריף שסוכם.
+     ---------------------------------------------------------------- */
+  function assignTask({ title, clientId, assignee, subcontractorId, fee, dueAt, priority = 'normal' }) {
+    const task = {
+      id: nextId('T'),
+      title,
+      clientId,
+      assignee,
+      subcontractorId,
+      type: 'maintenance',
+      slaKey: null,
+      priority,
+      status: 'open',
+      openedAt: new Date().toISOString(),
+      dueAt,
+      fee: fee || null,
+      feePaid: false,
+      recurring: null,
+      source: 'assigned',
+    }
+    setTasks((prev) => [task, ...prev])
+    return task
+  }
+
+  /* ----------------------------------------------------------------
+     תשלום לקבלן על משימה שהושלמה (סעיף 7).
+     התשלום נרשם אוטומטית כהוצאה בקטגוריית "תשלום לקבלן משנה"
+     (סעיף 9), ולכן מתעדכן מיד גם ברווח והפסד ובדשבורד.
+     ---------------------------------------------------------------- */
+  function paySubTask(taskId, enteredBy = 'מנהל המערכת') {
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task || !task.fee || task.feePaid) return
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId ? { ...t, feePaid: true, feePaidAt: new Date().toISOString() } : t
+      )
+    )
+    addExpense({
+      amount: task.fee,
+      categoryId: 'subcontractor',
+      vendor: task.assignee,
+      subcontractorId: task.subcontractorId,
+      method: 'העברה בנקאית',
+      notes: `תשלום עבור משימה: ${task.title}`,
+      enteredBy,
+    })
+  }
+
   /* העלאת מסמך חדש למאגר (סעיף 10) */
   function addDocument(meta) {
     const doc = {
@@ -373,6 +423,7 @@ export function CrmProvider({ children }) {
     convertLead, updateClientNotes, updateTaskStatus, markPaymentPaid,
     addExpense, addExpenseCategory, attachReceipt,
     addDocument, replaceDocument,
+    assignTask, paySubTask,
     ...derived,
   }
   return <CrmContext.Provider value={value}>{children}</CrmContext.Provider>

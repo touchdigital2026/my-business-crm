@@ -141,6 +141,9 @@ const t = (id, title, clientId, assignee, opts) => ({
   openedAt: daysAgo(opts.opened ?? 3),
   dueAt: inDays(opts.due),
   recurring: opts.recurring || null,
+  subcontractorId: opts.subId || null,
+  fee: opts.fee ?? null,
+  feePaid: false,
   source: 'seed',
 })
 
@@ -157,20 +160,24 @@ const seedTasks = [
   t('T09', 'פתיחת עמודים עסקיים', 'C27', 'אורי מזרחי', { type: 'setup', sla: 'businessPage', due: 3, opened: 1 }),
   t('T10', 'הקמת מספר וירטואלי', 'C28', 'אורי מזרחי', { type: 'setup', sla: 'businessPage', due: 5, opened: 2 }),
   /* --- עבודה שוטפת מול לקוחות פעילים --- */
-  t('T11', 'עדכון קמפיין גוגל', 'C05', 'רון לוי', { due: -3, opened: 6 }),
-  t('T12', 'עיצוב מחדש של דף הנחיתה', 'C14', 'רון לוי', { due: 2, opened: 2, status: 'inprogress' }),
-  t('T13', 'מייקאובר לעמוד האינסטגרם', 'C17', 'רון לוי', { due: 4, opened: 1 }),
-  t('T14', 'בניית ביו שיווקי חדש', 'C21', 'רון לוי', { due: 6, opened: 1 }),
-  t('T15', 'עריכת סרטון תדמית', 'C22', 'מאיה בר', { due: -4, opened: 9, priority: 'high' }),
-  t('T16', 'צילום ועריכת UGC', 'C23', 'מאיה בר', { due: -1, opened: 4, status: 'inprogress' }),
-  t('T17', 'הפקת ריל לקמפיין', 'C24', 'מאיה בר', { due: 3, opened: 1 }),
-  t('T18', 'ניהול סושיאל שבועי', 'C18', 'אלון גל', { due: 1, opened: 2, recurring: 'שבועי' }),
+  t('T11', 'עדכון קמפיין גוגל', 'C05', 'רון לוי', { due: -3, opened: 6, subId: 2, fee: 350 }),
+  t('T12', 'עיצוב מחדש של דף הנחיתה', 'C14', 'רון לוי', { due: 2, opened: 2, status: 'inprogress', subId: 2, fee: 500 }),
+  t('T13', 'מייקאובר לעמוד האינסטגרם', 'C17', 'רון לוי', { due: 4, opened: 1, subId: 2, fee: 300 }),
+  t('T14', 'בניית ביו שיווקי חדש', 'C21', 'רון לוי', { due: 6, opened: 1, subId: 2, fee: 280 }),
+  t('T15', 'עריכת סרטון תדמית', 'C22', 'מאיה בר', { due: -4, opened: 9, priority: 'high', subId: 3, fee: 900 }),
+  t('T16', 'צילום ועריכת UGC', 'C23', 'מאיה בר', { due: -1, opened: 4, status: 'inprogress', subId: 3, fee: 750 }),
+  t('T17', 'הפקת ריל לקמפיין', 'C24', 'מאיה בר', { due: 3, opened: 1, subId: 3, fee: 650 }),
+  t('T18', 'ניהול סושיאל שבועי', 'C18', 'אלון גל', { due: 1, opened: 2, recurring: 'שבועי', subId: 1 }),
   t('T19', 'סבב תיאום ציפיות', 'C02', 'יעל אדרי', { due: 5, opened: 1, priority: 'low' }),
   t('T20', 'בדיקת ביצועי קמפיין', 'C15', 'אורי מזרחי', { due: 7, opened: 1 }),
   /* --- משימות שהושלמו --- */
   t('T21', 'הקמת בוט וואטסאפ', 'C28', 'אורי מזרחי', { type: 'setup', sla: 'whatsappBot', due: -1, opened: 3, status: 'done' }),
   t('T22', 'פתיחת עמודים עסקיים', 'C26', 'יעל אדרי', { type: 'setup', sla: 'businessPage', due: -2, opened: 4, status: 'done' }),
   t('T23', 'הרמת קמפיין שיווק ממומן', 'C25', 'יעל אדרי', { type: 'setup', sla: 'campaign', due: -3, opened: 5, status: 'done' }),
+  /* --- משימות קבלנים שהושלמו וממתינות לתשלום (סעיף 7) --- */
+  t('T24', 'עריכת סרטון קצר לרשתות', 'C22', 'מאיה בר', { due: -2, opened: 5, status: 'done', subId: 3, fee: 850 }),
+  t('T25', 'עיצוב מודעה לקמפיין', 'C05', 'רון לוי', { due: -3, opened: 6, status: 'done', subId: 2, fee: 400 }),
+  t('T26', 'הקמת חנות אונליין – אפיון ראשוני', 'C22', 'נועם קיי', { due: -1, opened: 8, status: 'done', subId: 4, fee: 1500 }),
 ]
 
 /* ------------------------------------------------------------------
@@ -236,11 +243,43 @@ export const initialDocuments = _buildDocs(initialClients)
 
 /* ===== קבלני משנה (סעיף 13.7) ===== */
 export const subcontractors = [
-  { id: 1, name: 'אלון גל', field: 'ניהול סושיאל', avgHours: 0.7, slaRate: 97, completed: 41 },
-  { id: 2, name: 'רון לוי', field: 'עיצוב ומייקאובר', avgHours: 1.6, slaRate: 94, completed: 23 },
-  { id: 3, name: 'מאיה בר', field: 'וידאו ו-UGC', avgHours: 4.2, slaRate: 88, completed: 14 },
-  { id: 4, name: 'נועם קיי', field: 'אתרי חנויות', avgHours: 9.5, slaRate: 72, completed: 6 },
+  {
+    id: 1, name: 'אלון גל', field: 'ניהול סושיאל',
+    avgHours: 0.7, slaRate: 97, completed: 41,
+    phone: '052-8841360', email: 'alon.social@gmail.com',
+    rateType: 'monthly', rate: 1700,
+  },
+  {
+    id: 2, name: 'רון לוי', field: 'עיצוב ומייקאובר',
+    avgHours: 1.6, slaRate: 94, completed: 23,
+    phone: '054-6120583', email: 'ron.design@gmail.com',
+    rateType: 'hourly', rate: 180,
+  },
+  {
+    id: 3, name: 'מאיה בר', field: 'וידאו ו-UGC',
+    avgHours: 4.2, slaRate: 88, completed: 14,
+    phone: '050-7733914', email: 'maya.video@gmail.com',
+    rateType: 'perTask', rate: 850,
+  },
+  {
+    id: 4, name: 'נועם קיי', field: 'אתרי חנויות',
+    avgHours: 9.5, slaRate: 72, completed: 6,
+    phone: '053-2296108', email: 'noam.k.shops@gmail.com',
+    rateType: 'perTask', rate: 1500,
+    /* לאתרי חנויות – מעקב עמלה מהיקף המכירות (סעיף 7) */
+    revSharePct: 8,
+  },
 ]
+
+export const subcontractorByName = Object.fromEntries(subcontractors.map((s) => [s.name, s]))
+
+/* תווית תעריף קריאה */
+export function rateLabelOf(sub) {
+  const price = '₪' + sub.rate.toLocaleString('he-IL')
+  if (sub.rateType === 'hourly') return `${price} לשעה`
+  if (sub.rateType === 'monthly') return `${price} ריטיינר חודשי`
+  return `${price} למשימה`
+}
 
 /* תפקידי בעלי המשימות, לתצוגה בכרטיס "משימות לפי אחראי" */
 export const assigneeRoles = {
@@ -249,6 +288,7 @@ export const assigneeRoles = {
   'רון לוי': 'קבלן משנה – עיצוב',
   'מאיה בר': 'קבלן משנה – וידאו',
   'אלון גל': 'קבלן משנה – סושיאל',
+  'נועם קיי': 'קבלן משנה – אתרי חנויות',
 }
 
 /* ===== עזרי תצוגה ===== */

@@ -14,6 +14,7 @@ import Tasks from './Tasks.jsx'
 import Payments from './Payments.jsx'
 import Expenses from './Expenses.jsx'
 import Documents from './Documents.jsx'
+import Subcontractors from './Subcontractors.jsx'
 import { IconCustomers, IconWallet, IconTrend, IconAlert } from '../components/icons.jsx'
 import { useCrm } from '../store/CrmContext.jsx'
 
@@ -143,6 +144,8 @@ export default function Dashboard({ user, onLogout }) {
           <Expenses user={user} />
         ) : activePage === 'documents' ? (
           <Documents user={user} onOpenClient={openClient} />
+        ) : activePage === 'subcontractors' ? (
+          <Subcontractors onOpenClient={openClient} />
         ) : activePage === 'dashboard' ? (
           <div className="content__body">
             <div className="kpi-grid">

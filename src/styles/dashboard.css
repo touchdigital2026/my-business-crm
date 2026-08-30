@@ -1677,3 +1677,66 @@ textarea.fld__input { resize: vertical; }
 
 @media (max-width: 1199px) { .folders { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 767px) { .folders { grid-template-columns: repeat(2, 1fr); } }
+
+/* ============================================================
+   ניהול קבלני משנה (סעיף 7)
+   ============================================================ */
+
+.subs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+
+.sub-card {
+  text-align: start;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: border-color 0.15s ease, transform 0.12s ease;
+  position: relative;
+}
+.sub-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.sub-card__head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.sub-card__name { margin: 0; font-size: 16px; font-weight: 600; color: var(--ink); }
+.sub-card__field { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-3); }
+.sub-card__facts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.sub-card__rate { font-size: 13.5px; font-weight: 600; color: var(--accent-deep); }
+.sub-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--card-border);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.sub-card__access {
+  position: absolute;
+  top: 16px;
+  inset-inline-start: 16px;
+}
+
+.perm-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+.perm-list__yes { color: #0A7A0A; }
+.perm-list__no { color: var(--ink-3); }
+
+.alert-strip--info {
+  background: var(--accent-soft);
+  border-color: rgba(107, 76, 249, 0.3);
+  color: var(--accent-deep);
+}
+
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+
+@media (max-width: 900px) { .subs-grid { grid-template-columns: 1fr; } }
