@@ -21,7 +21,14 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ active, onNavigate, user, onLogout, open, onClose }) {
   /* מוני התפריט וכרטיס ההתראה נגזרים מהנתונים האמיתיים */
-  const { activeLeads, clients, openTasks, overdueTasks, paymentStats } = useCrm()
+  const { activeLeads, clients, openTasks, overdueTasks, paymentStats, cloudStatus } = useCrm()
+  const CLOUD_LABELS = {
+    off: { text: 'מצב דמו – נתונים מקומיים', cls: '' },
+    loading: { text: 'מתחבר לענן...', cls: '' },
+    on: { text: '☁ מחובר לענן – הנתונים נשמרים', cls: 'is-on' },
+    error: { text: 'שגיאת ענן – הוצג מצב דמו', cls: 'is-err' },
+  }
+  const cloud = CLOUD_LABELS[cloudStatus]
   const counts = {
     leads: activeLeads.length,
     clients: clients.length,
@@ -96,6 +103,7 @@ export default function Sidebar({ active, onNavigate, user, onLogout, open, onCl
         )}
 
         <div className="sidebar__foot">
+          <div className={`cloud-chip ${cloud.cls}`}>{cloud.text}</div>
           <div className="sidebar__user">
             <div className="avatar">{user.name.charAt(0)}</div>
             <div className="sidebar__user-info">

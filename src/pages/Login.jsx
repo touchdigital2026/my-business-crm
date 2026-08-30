@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase, isCloud } from '../lib/supabase.js'
 
 /* ------------------------------------------------------------------
    פרטי הכניסה הזמניים ל-MVP.
@@ -42,7 +43,33 @@ export default function Login({ onLogin }) {
     if (!validate()) return
 
     setLoading(true)
-    // השהיה קצרה שמדמה פנייה לשרת – תוחלף בקריאת API אמיתית
+
+    /* מצב ענן: התחברות אמיתית ומאובטחת מול Supabase (סעיף 15) */
+    if (isCloud) {
+      try {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        })
+        setLoading(false)
+        if (error) {
+          setFormError(
+            error.message.includes('Invalid')
+              ? 'האימייל או הסיסמה שגויים. נסה שוב.'
+              : 'לא ניתן להתחבר לשרת הענן – בדוק את החיבור לאינטרנט ואת המפתחות בקובץ .env.local'
+          )
+          return
+        }
+        onLogin({ email: email.trim(), name: DEMO_USER.name, remember })
+        return
+      } catch {
+        setLoading(false)
+        setFormError('לא ניתן להתחבר לשרת הענן – בדוק את החיבור לאינטרנט ואת המפתחות בקובץ .env.local')
+        return
+      }
+    }
+
+    // מצב דמו: השהיה קצרה שמדמה פנייה לשרת
     await new Promise((resolve) => setTimeout(resolve, 700))
     setLoading(false)
 
@@ -178,9 +205,15 @@ export default function Login({ onLogin }) {
         </form>
 
         <div className="login-hint">
-          פרטי כניסה לבדיקה:
-          <br />
-          <code>admin@crm.co.il</code> / <code>123456</code>
+          {isCloud ? (
+            <>☁ המערכת מחוברת לענן – התחבר עם המשתמש שיצרת ב-Supabase</>
+          ) : (
+            <>
+              מצב דמו · פרטי כניסה לבדיקה:
+              <br />
+              <code>admin@crm.co.il</code> / <code>123456</code>
+            </>
+          )}
         </div>
       </div>
     </div>

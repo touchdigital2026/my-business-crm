@@ -9,9 +9,7 @@ function useEscape(onClose) {
   }, [onClose])
 }
 import { useCrm } from '../store/CrmContext.jsx'
-import {
-  subcontractors, rateLabelOf, formatCurrency, currentMonthKey,
-} from '../data/mockData.js'
+import { rateLabelOf, formatCurrency, currentMonthKey } from '../data/mockData.js'
 
 /* ------------------------------------------------------------------
    ניהול קבלני משנה – סעיף 7 באפיון.
@@ -338,7 +336,7 @@ function SubDetail({ sub, onBack, onOpenClient }) {
 }
 
 export default function Subcontractors({ onOpenClient }) {
-  const { tasks, clients, expenses, paySubTask } = useCrm()
+  const { tasks, clients, expenses, paySubTask, subs: subcontractors } = useCrm()
   const [selectedId, setSelectedId] = useState(null)
 
   const clientById = useMemo(() => Object.fromEntries(clients.map((c) => [c.id, c])), [clients])

@@ -1,10 +1,12 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import {
   initialLeads, initialClients, initialTasks, initialPayments, initialExpenses,
-  initialDocuments,
+  initialDocuments, subcontractors as defaultSubs, todayRecurring,
   packageById, setupTasksFor, SLA, monthlyValueOf,
   EXPENSE_CATEGORIES, currentMonthKey, monthLabelOf,
 } from '../data/mockData.js'
+import { isCloud } from '../lib/supabase.js'
+import { persist, fetchAllCloud } from '../lib/persist.js'
 
 /* ------------------------------------------------------------------
    "המחסן" המרכזי של המערכת.
@@ -34,6 +36,42 @@ export function CrmProvider({ children }) {
   const [expenses, setExpenses] = useState(initialExpenses)
   const [expenseCategories, setExpenseCategories] = useState(EXPENSE_CATEGORIES)
   const [documents, setDocuments] = useState(initialDocuments)
+  const [subs, setSubs] = useState(defaultSubs)
+  /* off = מצב דמו | loading/on/error = מצב ענן */
+  const [cloudStatus, setCloudStatus] = useState(isCloud ? 'loading' : 'off')
+
+  /* ----------------------------------------------------------------
+     בכניסה במצב ענן: טוענים את כל הנתונים מ-Supabase במקום הדמו.
+     בנוסף, משלימים את משימות התחזוקה החוזרות של היום אם טרם נפתחו
+     (סעיף 6.3) – עד שהתזמון יעבור לצד השרת.
+     ---------------------------------------------------------------- */
+  useEffect(() => {
+    if (!isCloud) return
+    let alive = true
+    fetchAllCloud()
+      .then((data) => {
+        if (!alive) return
+        setLeads(data.leads)
+        setClients(data.clients)
+        setPayments(data.payments)
+        setExpenses(data.expenses)
+        setDocuments(data.documents)
+        if (data.subs.length) setSubs(data.subs)
+        setExpenseCategories(
+          data.categories.length ? data.categories : EXPENSE_CATEGORIES
+        )
+        const existing = new Set(data.tasks.map((t) => t.id))
+        const missingRecurring = todayRecurring.filter((t) => !existing.has(t.id))
+        setTasks([...missingRecurring, ...data.tasks])
+        if (missingRecurring.length) persist.tasks(missingRecurring)
+        setCloudStatus('on')
+      })
+      .catch((err) => {
+        console.warn('טעינת הנתונים מהענן נכשלה – ממשיכים במצב דמו:', err.message)
+        if (alive) setCloudStatus('error')
+      })
+    return () => { alive = false }
+  }, [])
 
   /* ----------------------------------------------------------------
      המרת ליד ללקוח – סעיף 4.3 באפיון.
@@ -93,6 +131,9 @@ export function CrmProvider({ children }) {
     )
     setClients((prev) => [newClient, ...prev])
     setTasks((prev) => [...newTasks, ...prev])
+    persist.lead({ ...lead, status: 'won', convertedTo: clientId })
+    persist.client(newClient)
+    persist.tasks(newTasks)
     /* מסמך ההסכם נפתח אוטומטית בתיקיית החוזים ומשויך ללקוח (סעיף 10) */
     setDocuments((prev) => [{
       id: nextId('D'),
@@ -107,6 +148,7 @@ export function CrmProvider({ children }) {
       visibility: 'מנהלי-על',
       versions: [],
     }, ...prev])
+    setDocuments((prev) => { persist.document(prev[0]); return prev })
 
     return { client: newClient, tasks: newTasks }
   }
@@ -114,11 +156,12 @@ export function CrmProvider({ children }) {
   /* קידום משימה בלוח הקנבן: פתוח ← בביצוע ← הושלם (סעיף 6.3) */
   function updateTaskStatus(taskId, status) {
     setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId
-          ? { ...t, status, completedAt: status === 'done' ? new Date().toISOString() : undefined }
-          : t
-      )
+      prev.map((t) => {
+        if (t.id !== taskId) return t
+        const next = { ...t, status, completedAt: status === 'done' ? new Date().toISOString() : undefined }
+        persist.task(next)
+        return next
+      })
     )
   }
 
@@ -134,16 +177,18 @@ export function CrmProvider({ children }) {
       )
       const payment = prev.find((p) => p.id === paymentId)
       if (payment) {
+        persist.payment(next.find((p) => p.id === paymentId))
         const stillOverdue = next.some(
           (p) => p.clientId === payment.clientId && p.status === 'overdue'
         )
         if (!stillOverdue) {
           setClients((cs) =>
-            cs.map((c) =>
-              c.id === payment.clientId
-                ? { ...c, paymentStatus: 'paid', overdueDays: undefined, overdueAmount: undefined }
-                : c
-            )
+            cs.map((c) => {
+              if (c.id !== payment.clientId) return c
+              const cleared = { ...c, paymentStatus: 'paid', overdueDays: undefined, overdueAmount: undefined }
+              persist.client(cleared)
+              return cleared
+            })
           )
         }
       }
@@ -163,6 +208,7 @@ export function CrmProvider({ children }) {
       ...record,
     }
     setExpenses((prev) => [entry, ...prev])
+    persist.expense(entry)
     return entry
   }
 
@@ -170,13 +216,19 @@ export function CrmProvider({ children }) {
   function addExpenseCategory(name) {
     const id = 'custom-' + nextId('cat')
     setExpenseCategories((prev) => [...prev, { id, name }])
+    persist.category({ id, name })
     return id
   }
 
   /* צירוף קובץ קבלה/חשבונית לרשומת הוצאה (סעיף 9.2) */
   function attachReceipt(expenseId, fileMeta) {
     setExpenses((prev) =>
-      prev.map((e) => (e.id === expenseId ? { ...e, receipt: fileMeta } : e))
+      prev.map((e) => {
+        if (e.id !== expenseId) return e
+        const next = { ...e, receipt: fileMeta }
+        persist.expense(next)
+        return next
+      })
     )
   }
 
@@ -203,6 +255,7 @@ export function CrmProvider({ children }) {
       source: 'assigned',
     }
     setTasks((prev) => [task, ...prev])
+    persist.task(task)
     return task
   }
 
@@ -214,11 +267,9 @@ export function CrmProvider({ children }) {
   function paySubTask(taskId, enteredBy = 'מנהל המערכת') {
     const task = tasks.find((t) => t.id === taskId)
     if (!task || !task.fee || task.feePaid) return
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId ? { ...t, feePaid: true, feePaidAt: new Date().toISOString() } : t
-      )
-    )
+    const paidTask = { ...task, feePaid: true, feePaidAt: new Date().toISOString() }
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? paidTask : t)))
+    persist.task(paidTask)
     addExpense({
       amount: task.fee,
       categoryId: 'subcontractor',
@@ -242,6 +293,7 @@ export function CrmProvider({ children }) {
       ...meta,
     }
     setDocuments((prev) => [doc, ...prev])
+    persist.document(doc)
     return doc
   }
 
@@ -256,20 +308,29 @@ export function CrmProvider({ children }) {
           uploadedAt: doc.uploadedAt,
           uploadedBy: doc.uploadedBy,
         }
-        return {
+        const next = {
           ...doc,
           ...fileMeta,
           uploadedAt: new Date().toISOString(),
           uploadedBy,
           versions: [previous, ...doc.versions],
         }
+        persist.document(next)
+        return next
       })
     )
   }
 
   /* עדכון שדה ההערות החופשי בכרטיס הלקוח (סעיף 3.2) */
   function updateClientNotes(clientId, notes) {
-    setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, notes } : c)))
+    setClients((prev) =>
+      prev.map((c) => {
+        if (c.id !== clientId) return c
+        const next = { ...c, notes }
+        persist.client(next)
+        return next
+      })
+    )
   }
 
   /* ----------------------------------------------------------------
@@ -419,7 +480,7 @@ export function CrmProvider({ children }) {
   }, [leads, clients, tasks, payments, expenses, expenseCategories, documents])
 
   const value = {
-    leads, clients, tasks, expenses, expenseCategories,
+    leads, clients, tasks, expenses, expenseCategories, subs, cloudStatus,
     convertLead, updateClientNotes, updateTaskStatus, markPaymentPaid,
     addExpense, addExpenseCategory, attachReceipt,
     addDocument, replaceDocument,

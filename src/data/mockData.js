@@ -211,7 +211,7 @@ function endOfWorkWeek() {
 
 const todayKey = new Date().toISOString().slice(0, 10)
 
-const todayRecurring = recurringTemplates.map((tpl) => ({
+export const todayRecurring = recurringTemplates.map((tpl) => ({
   id: `R-${tpl.key}-${todayKey}`,
   title: tpl.title,
   clientId: tpl.clientId,

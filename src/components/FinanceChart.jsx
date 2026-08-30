@@ -4,7 +4,7 @@ import { formatCurrency } from '../data/mockData.js'
 
 /* מעגל את הציר האנכי למספרים "עגולים" */
 function buildScale(values, steps = 4) {
-  const max = Math.max(...values)
+  const max = Math.max(...values, 1)   // הגנה למצב שבו אין עדיין נתונים
   const raw = max / steps
   const magnitude = Math.pow(10, Math.floor(Math.log10(raw)))
   const stepSize = Math.ceil(raw / magnitude) * magnitude

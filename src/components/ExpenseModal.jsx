@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCrm } from '../store/CrmContext.jsx'
-import { subcontractors, PAY_METHODS } from '../data/mockData.js'
+import { PAY_METHODS } from '../data/mockData.js'
 
 /* ------------------------------------------------------------------
    טופס רישום הוצאה חדשה – כל השדות מסעיף 9.1:
@@ -8,7 +8,7 @@ import { subcontractors, PAY_METHODS } from '../data/mockData.js'
    משנה קיים), אמצעי תשלום, קובץ קבלה, הערות, ומי הזין.
    ------------------------------------------------------------------ */
 export default function ExpenseModal({ user, onClose, onSaved }) {
-  const { expenseCategories, addExpense, addExpenseCategory } = useCrm()
+  const { expenseCategories, addExpense, addExpenseCategory, subs: subcontractors } = useCrm()
 
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState(expenseCategories[0].id)

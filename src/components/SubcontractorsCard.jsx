@@ -1,9 +1,10 @@
-import { subcontractors } from '../data/mockData.js'
+import { useCrm } from '../store/CrmContext.jsx'
 
 /* סעיף 13.7 – ביצועי קבלני משנה: זמן ממוצע להשלמת משימה.
    כאן זמן קצר יותר הוא טוב יותר, ולכן הרשימה ממוינת מהמהיר לאיטי
    ואחוז העמידה ב-SLA מוצג לצידו כטקסט. */
 export default function SubcontractorsCard() {
+  const { subs: subcontractors } = useCrm()
   const rows = [...subcontractors].sort((a, b) => a.avgHours - b.avgHours)
   const max = Math.max(...rows.map((r) => r.avgHours))
 

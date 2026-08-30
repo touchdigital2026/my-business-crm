@@ -213,7 +213,9 @@ export default function Expenses({ user }) {
                     <span dir="ltr">{formatCurrency(pnlTotals.income - pnlTotals.expense)}</span>
                   </td>
                   <td className="num muted" dir="ltr">
-                    {Math.round(((pnlTotals.income - pnlTotals.expense) / pnlTotals.income) * 100)}%
+                    {pnlTotals.income
+                      ? Math.round(((pnlTotals.income - pnlTotals.expense) / pnlTotals.income) * 100)
+                      : 0}%
                   </td>
                 </tr>
               </tbody>
