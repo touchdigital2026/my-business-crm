@@ -55,13 +55,17 @@ function TaskCard({ task, clientName, onAdvance, onRevert, onOpenClient, isOverd
       <h3 className="tcard__title">{task.title}</h3>
 
       <div className="tcard__meta">
-        <button
-          className="tcard__client"
-          onClick={() => onOpenClient(task.clientId)}
-          title="מעבר לכרטיס הלקוח"
-        >
-          {clientName} ↗
-        </button>
+        {onOpenClient ? (
+          <button
+            className="tcard__client"
+            onClick={() => onOpenClient(task.clientId)}
+            title="מעבר לכרטיס הלקוח"
+          >
+            {clientName} ↗
+          </button>
+        ) : (
+          <span className="tcard__client">{clientName}</span>
+        )}
         <span className="tcard__assignee">
           <span className="avatar avatar--xs">{task.assignee.charAt(0)}</span>
           {task.assignee}
@@ -88,8 +92,15 @@ function TaskCard({ task, clientName, onAdvance, onRevert, onOpenClient, isOverd
   )
 }
 
-export default function Tasks({ onOpenClient }) {
-  const { tasks, clients, updateTaskStatus, isOverdue, isDueSoon } = useCrm()
+/* onlySubcontractorId: לקבלן משנה מוצגות רק המשימות שהוקצו לו (סעיפים 2.2 + 7).
+   onOpenClient = null כשאין למשתמש גישה לכרטיסי הלקוחות. */
+export default function Tasks({ onOpenClient, onlySubcontractorId = null }) {
+  const { tasks: allTasks, clients, updateTaskStatus, isOverdue, isDueSoon } = useCrm()
+  const restricted = onlySubcontractorId !== null
+  const tasks = useMemo(
+    () => (restricted ? allTasks.filter((t) => t.subcontractorId === onlySubcontractorId) : allTasks),
+    [allTasks, restricted, onlySubcontractorId]
+  )
 
   const [assignee, setAssignee] = useState('all')
   const [type, setType] = useState('all')
@@ -154,16 +165,19 @@ export default function Tasks({ onOpenClient }) {
           />
         </div>
 
-        {/* לוח לכל אחראי + תצוגה כללית למנהלים (סעיף 6.3) */}
-        <label className="select">
-          <span className="select__label">אחראי</span>
-          <select value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-            <option value="all">תצוגה כללית – כולם</option>
-            {assignees.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
-        </label>
+        {/* לוח לכל אחראי + תצוגה כללית למנהלים (סעיף 6.3).
+            קבלן משנה רואה ממילא רק את הלוח שלו */}
+        {!restricted && (
+          <label className="select">
+            <span className="select__label">אחראי</span>
+            <select value={assignee} onChange={(e) => setAssignee(e.target.value)}>
+              <option value="all">תצוגה כללית – כולם</option>
+              {assignees.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="select">
           <span className="select__label">סוג משימה</span>

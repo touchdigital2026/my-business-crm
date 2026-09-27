@@ -4,6 +4,7 @@ import {
   initialLeads, initialClients, initialTasks, initialPayments,
   initialExpenses, initialDocuments, subcontractors, EXPENSE_CATEGORIES,
 } from '../src/data/mockData.js'
+import { initialUsers } from '../src/data/users.js'
 
 const q = (v) => {
   if (v === null || v === undefined || v === '') return v === '' ? "''" : 'null'
@@ -91,6 +92,16 @@ out += insert('documents',
     folder_id: q(d.folderId), client_id: q(d.clientId ?? null), tags: arr(d.tags),
     uploaded_at: q(d.uploadedAt), uploaded_by: q(d.uploadedBy),
     visibility: q(d.visibility || 'מנהלי-על'), versions: json(d.versions || []),
+  })))
+
+/* צוות הדמו – בלי מנהל-העל: המשתמש הראשון שנכנס בפועל הופך למנהל-על */
+out += insert('team_members',
+  ['id','name','email','phone','role','title','status','subcontractor_id','invited_at','invite_expires_at','last_login_at'],
+  initialUsers.filter((u) => u.role !== 'super_admin').map((u) => ({
+    id: q(u.id), name: q(u.name), email: q(u.email), phone: q(u.phone), role: q(u.role),
+    title: q(u.title), status: q(u.status), subcontractor_id: q(u.subcontractorId ?? null),
+    invited_at: q(u.invitedAt ?? null), invite_expires_at: q(u.inviteExpiresAt ?? null),
+    last_login_at: q(u.lastLoginAt ?? null),
   })))
 
 process.stdout.write(out)

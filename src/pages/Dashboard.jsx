@@ -15,8 +15,10 @@ import Payments from './Payments.jsx'
 import Expenses from './Expenses.jsx'
 import Documents from './Documents.jsx'
 import Subcontractors from './Subcontractors.jsx'
+import Users from './Users.jsx'
 import { IconCustomers, IconWallet, IconTrend, IconAlert } from '../components/icons.jsx'
 import { useCrm } from '../store/CrmContext.jsx'
+import { allowedModules } from '../data/users.js'
 
 const PAGE_TITLES = {
   dashboard: 'דשבורד',
@@ -32,9 +34,16 @@ const PAGE_TITLES = {
 }
 
 export default function Dashboard({ user, onLogout }) {
-  const [activePage, setActivePage] = useState('dashboard')
+  const [requestedPage, setActivePage] = useState('dashboard')
   const [menuOpen, setMenuOpen] = useState(false)
   const [openClientId, setOpenClientId] = useState(null)   // כרטיס הלקוח הפתוח
+
+  /* המודולים שהמשתמש המחובר רשאי לראות (סעיף 2). מסך שאינו מורשה
+     מוחלף במסך המורשה הראשון – כך קבלן משנה נוחת ישר במשימות שלו. */
+  const { permissions } = useCrm()
+  const allowed = allowedModules(user.role, permissions)
+  const activePage = allowed.includes(requestedPage) ? requestedPage : allowed[0] || null
+  const canOpenClients = allowed.includes('clients')
 
   function handleNavigate(pageId) {
     setActivePage(pageId)
@@ -44,6 +53,7 @@ export default function Dashboard({ user, onLogout }) {
 
   /* קפיצה ישירה לכרטיס לקוח – מהמרת ליד או מטבלת הסיכון בדשבורד */
   function openClient(clientId) {
+    if (!canOpenClients) return
     setOpenClientId(clientId)
     setActivePage('clients')
     setMenuOpen(false)
@@ -114,6 +124,7 @@ export default function Dashboard({ user, onLogout }) {
     <div className="app">
       <Sidebar
         active={activePage}
+        allowed={allowed}
         onNavigate={handleNavigate}
         user={user}
         onLogout={onLogout}
@@ -125,19 +136,30 @@ export default function Dashboard({ user, onLogout }) {
         <Topbar
           user={user}
           breadcrumbs={[
-            'דשבורד',
-            ...(activePage !== 'dashboard' ? [PAGE_TITLES[activePage]] : []),
+            ...(allowed.includes('dashboard') ? ['דשבורד'] : []),
+            ...(activePage && activePage !== 'dashboard' ? [PAGE_TITLES[activePage]] : []),
             ...(activePage === 'clients' && openClientId ? ['כרטיס לקוח'] : []),
           ]}
           onOpenMenu={() => setMenuOpen(true)}
         />
 
-        {activePage === 'leads' ? (
+        {!activePage ? (
+          <div className="content__body">
+            <section className="card empty-state">
+              <div className="empty-state__badge">🔒</div>
+              <h2>אין מודולים פתוחים לחשבון שלך</h2>
+              <p>מנהל המערכת יכול לפתוח לך גישה במסך "משתמשים".</p>
+            </section>
+          </div>
+        ) : activePage === 'leads' ? (
           <Leads onOpenClient={openClient} />
         ) : activePage === 'clients' ? (
           <Clients selectedClientId={openClientId} onSelect={setOpenClientId} />
         ) : activePage === 'tasks' ? (
-          <Tasks onOpenClient={openClient} />
+          <Tasks
+            onOpenClient={canOpenClients ? openClient : null}
+            onlySubcontractorId={user.role === 'subcontractor' ? user.subcontractorId ?? -1 : null}
+          />
         ) : activePage === 'payments' ? (
           <Payments onOpenClient={openClient} />
         ) : activePage === 'expenses' ? (
@@ -146,6 +168,8 @@ export default function Dashboard({ user, onLogout }) {
           <Documents user={user} onOpenClient={openClient} />
         ) : activePage === 'subcontractors' ? (
           <Subcontractors onOpenClient={openClient} />
+        ) : activePage === 'users' ? (
+          <Users currentUser={user} />
         ) : activePage === 'dashboard' ? (
           <div className="content__body">
             <div className="kpi-grid">
@@ -183,9 +207,9 @@ export default function Dashboard({ user, onLogout }) {
               </p>
               <button
                 className="btn-primary btn-primary--inline"
-                onClick={() => setActivePage('dashboard')}
+                onClick={() => setActivePage(allowed[0])}
               >
-                חזרה לדשבורד
+                חזרה למסך הראשי
               </button>
             </section>
           </div>

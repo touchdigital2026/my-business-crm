@@ -275,3 +275,37 @@
   .login-card { padding: 32px 22px 26px; }
   .login-title { font-size: 23px; }
 }
+
+/* כפתורי מילוי מהיר של משתמשי הדמו – אחד לכל תפקיד */
+.login-hint__users {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.login-hint__user {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.login-hint__user:hover { border-color: var(--accent); }
+.login-hint__user strong { color: var(--text); font-weight: 600; }
+.login-hint__user code {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 10.5px;
+}
+@media (max-width: 480px) {
+  .login-hint__users { grid-template-columns: 1fr; }
+}

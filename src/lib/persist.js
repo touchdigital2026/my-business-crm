@@ -57,6 +57,13 @@ const to = {
     uploaded_by: d.uploadedBy, visibility: d.visibility || 'מנהלי-על',
     url: cleanUrl(d.url), versions: d.versions || [],
   }),
+  user: (u) => ({
+    id: u.id, name: u.name, email: u.email, phone: u.phone || null, role: u.role,
+    title: u.title || '', status: u.status, subcontractor_id: u.subcontractorId ?? null,
+    invited_at: u.invitedAt ?? null, invite_expires_at: u.inviteExpiresAt ?? null,
+    last_login_at: u.lastLoginAt ?? null,
+  }),
+  permissions: (p) => ({ role: p.role, modules: p.modules }),
 }
 
 /* ---- ממירים: מסד -> אפליקציה ---- */
@@ -110,6 +117,13 @@ const from = {
     revSharePct: r.rev_share_pct != null ? Number(r.rev_share_pct) : undefined,
     avgHours: Number(r.avg_hours), slaRate: Number(r.sla_rate), completed: r.completed,
   }),
+  user: (r) => ({
+    id: r.id, name: r.name, email: r.email, phone: r.phone || '', role: r.role,
+    title: r.title || '', status: r.status, subcontractorId: r.subcontractor_id ?? undefined,
+    invitedAt: r.invited_at ?? undefined, inviteExpiresAt: r.invite_expires_at ?? undefined,
+    lastLoginAt: r.last_login_at ?? null,
+  }),
+  permissions: (r) => ({ role: r.role, modules: r.modules || [] }),
 }
 
 /* שמירה ברקע – לא חוסמת את הממשק */
@@ -132,6 +146,21 @@ export const persist = {
   expense: (r) => save('expenses', to.expense, r, 'הוצאה'),
   category: (r) => save('expense_categories', to.category, r, 'קטגוריה'),
   document: (r) => save('documents', to.document, r, 'מסמך'),
+  user: (r) => save('team_members', to.user, r, 'משתמש'),
+  permissions: (r) => save('role_permissions', to.permissions, r, 'הרשאות'),
+}
+
+/* ----------------------------------------------------------------
+   כניסה במצב ענן: מחזירה את רשומת המשתמש מטבלת הצוות.
+   הפונקציה crm_login בצד השרת גם רושמת את זמן הכניסה, מפעילה
+   משתמש שהוזמן, והופכת את המשתמש הראשון במערכת למנהל-על.
+   member: null = החשבון אינו רשום בצוות או שהושבת.
+   ---------------------------------------------------------------- */
+export async function cloudLogin() {
+  const { data, error } = await supabase.rpc('crm_login')
+  /* PGRST202 = הפונקציה לא קיימת: הסכמה בענן עדיין מלפני ההרשאות */
+  if (error) return { legacy: error.code === 'PGRST202', error }
+  return { member: data ? from.user(data) : null }
 }
 
 /* טעינת כל הנתונים מהענן בכניסה למערכת */
@@ -140,7 +169,8 @@ export async function fetchAllCloud() {
     ['leads', from.lead], ['clients', from.client], ['tasks', from.task],
     ['payments', from.payment], ['expenses', from.expense],
     ['expense_categories', from.category], ['documents', from.document],
-    ['subcontractors', from.sub],
+    ['subcontractors', from.sub], ['team_members', from.user],
+    ['role_permissions', from.permissions],
   ]
   const results = await Promise.all(
     tables.map(async ([table, mapper]) => {
@@ -152,5 +182,6 @@ export async function fetchAllCloud() {
   return {
     leads: results[0], clients: results[1], tasks: results[2], payments: results[3],
     expenses: results[4], categories: results[5], documents: results[6], subs: results[7],
+    users: results[8], permissions: results[9],
   }
 }

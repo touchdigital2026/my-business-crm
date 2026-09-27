@@ -4,6 +4,7 @@ import {
   IconLogout, IconClose, IconSearch, IconAlert,
 } from './icons.jsx'
 import { useCrm } from '../store/CrmContext.jsx'
+import { roleById } from '../data/users.js'
 
 /* המודולים לפי סעיף 16.3 באפיון. כדי להוסיף מסך – מוסיפים כאן שורה. */
 const NAV_ITEMS = [
@@ -19,9 +20,13 @@ const NAV_ITEMS = [
   { id: 'reports', label: 'דוחות', Icon: IconReports },
 ]
 
-export default function Sidebar({ active, onNavigate, user, onLogout, open, onClose }) {
+export default function Sidebar({ active, allowed, onNavigate, user, onLogout, open, onClose }) {
   /* מוני התפריט וכרטיס ההתראה נגזרים מהנתונים האמיתיים */
-  const { activeLeads, clients, openTasks, overdueTasks, paymentStats, cloudStatus } = useCrm()
+  const { activeLeads, clients, openTasks: allOpen, overdueTasks: allOverdue, paymentStats, cloudStatus } = useCrm()
+  /* קבלן משנה סופר רק את המשימות שהוקצו לו */
+  const mine = (t) => user.role !== 'subcontractor' || t.subcontractorId === user.subcontractorId
+  const openTasks = allOpen.filter(mine)
+  const overdueTasks = allowed.includes('tasks') ? allOverdue.filter(mine) : []
   const CLOUD_LABELS = {
     off: { text: 'מצב דמו – נתונים מקומיים', cls: '' },
     loading: { text: 'מתחבר לענן...', cls: '' },
@@ -69,7 +74,7 @@ export default function Sidebar({ active, onNavigate, user, onLogout, open, onCl
         </div>
 
         <nav className="sidebar__nav" aria-label="ניווט ראשי">
-          {NAV_ITEMS.map(({ id, label, Icon }) => (
+          {NAV_ITEMS.filter((item) => allowed.includes(item.id)).map(({ id, label, Icon }) => (
             <button
               key={id}
               className={`nav-item ${active === id ? 'is-active' : ''}`}
@@ -108,6 +113,7 @@ export default function Sidebar({ active, onNavigate, user, onLogout, open, onCl
             <div className="avatar">{user.name.charAt(0)}</div>
             <div className="sidebar__user-info">
               <div className="sidebar__user-name">{user.name}</div>
+              <div className="sidebar__user-role">{roleById[user.role]?.label}</div>
               <div className="sidebar__user-mail">{user.email}</div>
             </div>
           </div>

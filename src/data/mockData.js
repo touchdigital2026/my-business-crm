@@ -190,10 +190,10 @@ const seedTasks = [
    כשנחבר שרת, אותן תבניות ירוצו בתזמון אמיתי בצד השרת.
    ------------------------------------------------------------------ */
 export const recurringTemplates = [
-  { key: 'paid-C01', title: 'תחזוקת שיווק ממומן', clientId: 'C01', assignee: 'אלון גל', sla: 'paidMaint', freq: 'יומי' },
+  { key: 'paid-C01', title: 'תחזוקת שיווק ממומן', clientId: 'C01', assignee: 'אלון גל', subId: 1, sla: 'paidMaint', freq: 'יומי' },
   { key: 'paid-C21', title: 'תחזוקת שיווק ממומן', clientId: 'C21', assignee: 'יעל אדרי', sla: 'paidMaint', freq: 'יומי' },
   { key: 'organic-C22', title: 'תחזוקת שיווק אורגני', clientId: 'C22', assignee: 'אורי מזרחי', sla: 'organicMaint', freq: 'יומי' },
-  { key: 'gantt-C14', title: 'יצירת גאנט + העלאת פוסטים', clientId: 'C14', assignee: 'אלון גל', sla: 'gantt', freq: 'שבועי' },
+  { key: 'gantt-C14', title: 'יצירת גאנט + העלאת פוסטים', clientId: 'C14', assignee: 'אלון גל', subId: 1, sla: 'gantt', freq: 'שבועי' },
 ]
 
 function endOfToday() {
@@ -216,6 +216,7 @@ export const todayRecurring = recurringTemplates.map((tpl) => ({
   title: tpl.title,
   clientId: tpl.clientId,
   assignee: tpl.assignee,
+  subcontractorId: tpl.subId ?? null,   // קבלן משנה רואה רק משימות שמשויכות אליו
   type: 'maintenance',
   slaKey: tpl.sla,
   priority: 'normal',

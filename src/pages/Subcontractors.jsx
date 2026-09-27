@@ -9,56 +9,19 @@ function useEscape(onClose) {
   }, [onClose])
 }
 import { useCrm } from '../store/CrmContext.jsx'
+import InviteModal from '../components/InviteModal.jsx'
+import { USER_STATUS_LABELS, statusOf } from '../data/users.js'
 import { rateLabelOf, formatCurrency, currentMonthKey } from '../data/mockData.js'
 
 /* ------------------------------------------------------------------
    ניהול קבלני משנה – סעיף 7 באפיון.
    כרטיס קבלן (שם, התמחות, פרטי קשר, תעריף), הקצאת משימות,
-   מעקב תשלומים מול משימות שהושלמו, ותשתית ויזואלית להזמנה
-   למערכת בהרשאות מוגבלות (תופעל עם חיבור השרת – סעיפים 2.2 + 7).
+   מעקב תשלומים מול משימות שהושלמו, והזמנה למערכת בהרשאות
+   מוגבלות (סעיפים 2.2 + 7).
    ------------------------------------------------------------------ */
 
 function dateHe(iso) {
   return new Date(iso).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: '2-digit' })
-}
-
-/* חלון הזמנת קבלן למערכת – תשתית ויזואלית בלבד בשלב זה */
-function InviteModal({ sub, onClose }) {
-  useEscape(onClose)
-  return (
-    <div className="modal-layer" onClick={onClose}>
-      <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <header className="modal__head">
-          <div>
-            <h2 className="modal__title">הזמנת {sub.name} למערכת</h2>
-            <p className="modal__subtitle">תהליך ההזמנה המאובטח מסעיף 2.2 באפיון</p>
-          </div>
-          <button className="modal__close" onClick={onClose} aria-label="סגירה">✕</button>
-        </header>
-        <div className="modal__body">
-          <p className="modal__note">
-            הקבלן יקבל <strong>קישור הזמנה חד-פעמי</strong> (בתוקף 48 שעות) בוואטסאפ
-            או באימייל, יקבע סיסמה אישית, וייכנס עם ערכת ההרשאות המוגבלת:
-          </p>
-          <ul className="perm-list">
-            <li className="perm-list__yes">✓ רואה את המשימות שהוקצו לו בלבד</li>
-            <li className="perm-list__yes">✓ רואה את החומרים הרלוונטיים ללקוח הספציפי</li>
-            <li className="perm-list__no">✗ ללא גישה לנתונים כספיים</li>
-            <li className="perm-list__no">✗ ללא גישה ללקוחות אחרים או לכלל נתוני הלקוח</li>
-          </ul>
-          <div className="alert-strip alert-strip--info">
-            שליחת ההזמנה בפועל תופעל עם חיבור המערכת לשרת – התשתית מוכנה.
-          </div>
-        </div>
-        <footer className="modal__foot">
-          <button className="btn-ghost" onClick={onClose}>סגירה</button>
-          <button className="btn-primary btn-primary--inline" disabled title="יופעל עם חיבור השרת">
-            שליחת הזמנה
-          </button>
-        </footer>
-      </div>
-    </div>
-  )
 }
 
 /* טופס הקצאת משימה לקבלן (סעיף 7) */
@@ -133,7 +96,10 @@ function AssignModal({ sub, clients, onAssign, onClose }) {
 
 /* תצוגת קבלן בודד */
 function SubDetail({ sub, onBack, onOpenClient }) {
-  const { tasks, clients, expenses, assignTask, paySubTask, isOverdue } = useCrm()
+  const { tasks, clients, expenses, assignTask, paySubTask, isOverdue, users } = useCrm()
+  /* המשתמש של הקבלן במערכת, אם כבר הוזמן */
+  const account = users.find((u) => u.subcontractorId === sub.id)
+  const accountStatus = account ? USER_STATUS_LABELS[statusOf(account)] : null
   const [assignOpen, setAssignOpen] = useState(false)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [assigned, setAssigned] = useState(false)
@@ -301,9 +267,16 @@ function SubDetail({ sub, onBack, onOpenClient }) {
               <li className="perm-list__no">✗ נתונים כספיים</li>
               <li className="perm-list__no">✗ לקוחות אחרים</li>
             </ul>
-            <button className="chip-btn" onClick={() => setInviteOpen(true)}>
-              ✉️ הזמנה למערכת
-            </button>
+            {account ? (
+              <p className="sub-access">
+                <span className={`pill pill--${accountStatus.tone}`}>{accountStatus.label}</span>
+                <span dir="ltr">{account.email}</span>
+              </p>
+            ) : (
+              <button className="chip-btn" onClick={() => setInviteOpen(true)}>
+                ✉️ הזמנה למערכת
+              </button>
+            )}
           </section>
 
           <section className="card">
@@ -330,13 +303,13 @@ function SubDetail({ sub, onBack, onOpenClient }) {
           onAssign={(record) => { assignTask(record); setAssignOpen(false); setAssigned(true) }}
         />
       )}
-      {inviteOpen && <InviteModal sub={sub} onClose={() => setInviteOpen(false)} />}
+      {inviteOpen && <InviteModal presetSub={sub} onClose={() => setInviteOpen(false)} />}
     </>
   )
 }
 
 export default function Subcontractors({ onOpenClient }) {
-  const { tasks, clients, expenses, paySubTask, subs: subcontractors } = useCrm()
+  const { tasks, clients, expenses, paySubTask, subs: subcontractors, users } = useCrm()
   const [selectedId, setSelectedId] = useState(null)
 
   const clientById = useMemo(() => Object.fromEntries(clients.map((c) => [c.id, c])), [clients])
@@ -452,7 +425,15 @@ export default function Subcontractors({ onOpenClient }) {
                   <span className="pill pill--active">אין חוב פתוח</span>
                 )}
               </div>
-              <span className="pill pill--muted sub-card__access">גישה: טרם הוזמן</span>
+              {(() => {
+                const account = users.find((u) => u.subcontractorId === sub.id)
+                const st = account ? USER_STATUS_LABELS[statusOf(account)] : null
+                return (
+                  <span className={`pill pill--${st ? st.tone : 'muted'} sub-card__access`}>
+                    גישה: {st ? st.label : 'טרם הוזמן'}
+                  </span>
+                )
+              })()}
             </button>
           )
         })}

@@ -5,6 +5,7 @@ import {
   packageById, setupTasksFor, SLA, monthlyValueOf,
   EXPENSE_CATEGORIES, currentMonthKey, monthLabelOf,
 } from '../data/mockData.js'
+import { initialUsers, DEFAULT_PERMISSIONS, INVITE_HOURS } from '../data/users.js'
 import { isCloud } from '../lib/supabase.js'
 import { persist, fetchAllCloud } from '../lib/persist.js'
 
@@ -28,7 +29,7 @@ function dueDateFor(slaKey) {
   return new Date(Date.now() + minutes * 60 * 1000).toISOString()
 }
 
-export function CrmProvider({ children }) {
+export function CrmProvider({ user, children }) {
   const [leads, setLeads] = useState(initialLeads)
   const [clients, setClients] = useState(initialClients)
   const [tasks, setTasks] = useState(initialTasks)
@@ -37,6 +38,8 @@ export function CrmProvider({ children }) {
   const [expenseCategories, setExpenseCategories] = useState(EXPENSE_CATEGORIES)
   const [documents, setDocuments] = useState(initialDocuments)
   const [subs, setSubs] = useState(defaultSubs)
+  const [users, setUsers] = useState(initialUsers)
+  const [permissions, setPermissions] = useState(DEFAULT_PERMISSIONS)
   /* off = מצב דמו | loading/on/error = מצב ענן */
   const [cloudStatus, setCloudStatus] = useState(isCloud ? 'loading' : 'off')
 
@@ -57,11 +60,21 @@ export function CrmProvider({ children }) {
         setExpenses(data.expenses)
         setDocuments(data.documents)
         if (data.subs.length) setSubs(data.subs)
+        setUsers(data.users)
+        if (data.permissions.length) {
+          setPermissions({
+            ...DEFAULT_PERMISSIONS,
+            ...Object.fromEntries(data.permissions.map((p) => [p.role, p.modules])),
+          })
+        }
         setExpenseCategories(
           data.categories.length ? data.categories : EXPENSE_CATEGORIES
         )
+        /* קבלן משנה לא רואה את משימות האחרים, ולכן לא משלים אותן */
         const existing = new Set(data.tasks.map((t) => t.id))
-        const missingRecurring = todayRecurring.filter((t) => !existing.has(t.id))
+        const missingRecurring = user?.role === 'subcontractor'
+          ? []
+          : todayRecurring.filter((t) => !existing.has(t.id))
         setTasks([...missingRecurring, ...data.tasks])
         if (missingRecurring.length) persist.tasks(missingRecurring)
         setCloudStatus('on')
@@ -334,6 +347,58 @@ export function CrmProvider({ children }) {
   }
 
   /* ----------------------------------------------------------------
+     משתמשים והרשאות – סעיף 2.
+     הזמנה יוצרת משתמש בסטטוס "הוזמן" עם תוקף של 48 שעות (סעיף 2.2).
+     ---------------------------------------------------------------- */
+  function inviteUser(record) {
+    const now = Date.now()
+    const user = {
+      id: nextId('U'),
+      title: '',
+      phone: '',
+      ...record,
+      email: record.email.trim().toLowerCase(),
+      status: 'invited',
+      invitedAt: new Date(now).toISOString(),
+      inviteExpiresAt: new Date(now + INVITE_HOURS * 60 * 60 * 1000).toISOString(),
+      lastLoginAt: null,
+    }
+    setUsers((prev) => [...prev, user])
+    persist.user(user)
+    return user
+  }
+
+  /* חידוש הזמנה שפג תוקפה – 48 שעות נוספות מעכשיו */
+  function renewInvite(userId) {
+    return updateUser(userId, {
+      invitedAt: new Date().toISOString(),
+      inviteExpiresAt: new Date(Date.now() + INVITE_HOURS * 60 * 60 * 1000).toISOString(),
+    })
+  }
+
+  /* עדכון פרטים, תפקיד או סטטוס (השבתה / הפעלה מחדש) */
+  function updateUser(userId, changes) {
+    const current = users.find((u) => u.id === userId)
+    if (!current) return null
+    const next = { ...current, ...changes }
+    setUsers((prev) => prev.map((u) => (u.id === userId ? next : u)))
+    persist.user(next)
+    return next
+  }
+
+  /* פתיחה או חסימה של מודול לתפקיד במטריצת ההרשאות */
+  function setRoleModule(role, moduleId, allowed) {
+    setPermissions((prev) => {
+      const current = prev[role] || []
+      const modules = allowed
+        ? [...new Set([...current, moduleId])]
+        : current.filter((id) => id !== moduleId)
+      persist.permissions({ role, modules })
+      return { ...prev, [role]: modules }
+    })
+  }
+
+  /* ----------------------------------------------------------------
      נתונים נגזרים – מחושבים מחדש אוטומטית בכל שינוי,
      כך שהדשבורד תמיד משקף את המצב האמיתי.
      ---------------------------------------------------------------- */
@@ -485,6 +550,7 @@ export function CrmProvider({ children }) {
     addExpense, addExpenseCategory, attachReceipt,
     addDocument, replaceDocument,
     assignTask, paySubTask,
+    users, permissions, inviteUser, renewInvite, updateUser, setRoleModule,
     ...derived,
   }
   return <CrmContext.Provider value={value}>{children}</CrmContext.Provider>

@@ -1,15 +1,29 @@
 import { useState } from 'react'
 import { supabase, isCloud } from '../lib/supabase.js'
+import { cloudLogin } from '../lib/persist.js'
+import { initialUsers, DEMO_PASSWORD, statusOf } from '../data/users.js'
 
 /* ------------------------------------------------------------------
-   פרטי הכניסה הזמניים ל-MVP.
-   בשלב הבא נחליף אותם בבדיקה אמיתית מול שרת/מסד נתונים.
+   מצב דמו: כל משתמשי צוות הדמו נכנסים עם אותה סיסמה, וכל אחד
+   רואה את המערכת לפי התפקיד שלו (סעיף 2).
    ------------------------------------------------------------------ */
-const DEMO_USER = {
-  email: 'admin@crm.co.il',
-  password: '123456',
-  name: 'מנהל המערכת',
-}
+const DEMO_LOGINS = [
+  { email: 'admin@crm.co.il', label: 'מנהל-על' },
+  { email: 'yael@crm.co.il', label: 'צוות' },
+  { email: 'alon.social@gmail.com', label: 'קבלן משנה' },
+]
+
+const NO_ACCESS = 'לחשבון הזה אין גישה למערכת. פנה למנהל המערכת.'
+
+/* הפרטים שהמערכת צריכה על המשתמש המחובר */
+const sessionUserOf = (member, remember) => ({
+  id: member.id,
+  email: member.email,
+  name: member.name,
+  role: member.role,
+  subcontractorId: member.subcontractorId,
+  remember,
+})
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -51,8 +65,8 @@ export default function Login({ onLogin }) {
           email: email.trim(),
           password,
         })
-        setLoading(false)
         if (error) {
+          setLoading(false)
           setFormError(
             error.message.includes('Invalid')
               ? 'האימייל או הסיסמה שגויים. נסה שוב.'
@@ -60,7 +74,24 @@ export default function Login({ onLogin }) {
           )
           return
         }
-        onLogin({ email: email.trim(), name: DEMO_USER.name, remember })
+        /* זיהוי התפקיד מטבלת הצוות. מי שלא רשום או הושבת – לא נכנס */
+        const result = await cloudLogin()
+        let member = result.member
+        if (result.legacy) {
+          /* הסכמה בענן עדיין בגרסה הישנה (לפני ההרשאות) – נכנסים כמנהל-על */
+          console.warn('טבלת הצוות לא קיימת בענן – יש להריץ מחדש את supabase/schema.sql')
+          member = { id: 'owner', email: email.trim(), name: email.trim().split('@')[0], role: 'super_admin' }
+        } else if (result.error) {
+          throw result.error
+        }
+        if (!member) {
+          await supabase.auth.signOut()
+          setLoading(false)
+          setFormError(NO_ACCESS)
+          return
+        }
+        setLoading(false)
+        onLogin(sessionUserOf(member, remember))
         return
       } catch {
         setLoading(false)
@@ -73,15 +104,17 @@ export default function Login({ onLogin }) {
     await new Promise((resolve) => setTimeout(resolve, 700))
     setLoading(false)
 
-    const ok =
-      email.trim().toLowerCase() === DEMO_USER.email && password === DEMO_USER.password
-
-    if (!ok) {
+    const member = initialUsers.find((u) => u.email === email.trim().toLowerCase())
+    if (!member || password !== DEMO_PASSWORD) {
       setFormError('האימייל או הסיסמה שגויים. נסה שוב.')
       return
     }
+    if (['disabled', 'expired'].includes(statusOf(member))) {
+      setFormError(NO_ACCESS)
+      return
+    }
 
-    onLogin({ email: DEMO_USER.email, name: DEMO_USER.name, remember })
+    onLogin(sessionUserOf(member, remember))
   }
 
   return (
@@ -209,9 +242,25 @@ export default function Login({ onLogin }) {
             <>☁ המערכת מחוברת לענן – התחבר עם המשתמש שיצרת ב-Supabase</>
           ) : (
             <>
-              מצב דמו · פרטי כניסה לבדיקה:
-              <br />
-              <code>admin@crm.co.il</code> / <code>123456</code>
+              מצב דמו · סיסמה לכל המשתמשים: <code>{DEMO_PASSWORD}</code>
+              <div className="login-hint__users">
+                {DEMO_LOGINS.map((demo) => (
+                  <button
+                    key={demo.email}
+                    type="button"
+                    className="login-hint__user"
+                    onClick={() => {
+                      setEmail(demo.email)
+                      setPassword(DEMO_PASSWORD)
+                      setErrors({})
+                      setFormError('')
+                    }}
+                  >
+                    <strong>{demo.label}</strong>
+                    <code>{demo.email}</code>
+                  </button>
+                ))}
+              </div>
             </>
           )}
         </div>

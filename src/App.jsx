@@ -14,7 +14,7 @@ export default function App() {
   /* CrmProvider מחזיק את הלידים, הלקוחות והמשימות במקום אחד,
      כך שכל המסכים רואים את אותם נתונים ומתעדכנים יחד. */
   return (
-    <CrmProvider>
+    <CrmProvider user={user}>
       <Dashboard user={user} onLogout={() => setUser(null)} />
     </CrmProvider>
   )
