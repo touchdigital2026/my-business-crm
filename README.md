@@ -70,8 +70,10 @@ npm run dev
    ואז את `supabase/seed.sql` (נתוני הפתיחה).
 3. ב-Authentication → Users צור משתמש (אימייל + סיסמה) – זה יהיה
    המשתמש שאיתו תתחבר למערכת.
-4. שכפל את `.env.example` לקובץ בשם `.env.local` והדבק בו את
-   ה-Project URL ואת ה-anon key (Settings → API).
+4. לחיצה כפולה על **`חיבור-לענן.command`** והדבקת שני ערכים מ-Supabase
+   (Project Settings ← Data API / API Keys): ה-Project URL והמפתח
+   הציבורי (anon / publishable). הקובץ שומר אותם ב-`.env.local`.
+   **לעולם לא את המפתח הסודי** (secret / service_role) – הקובץ יסרב לו.
 5. הפעל מחדש. מסך ההתחברות יציג "מחוברת לענן", ובתחתית סרגל
    הצד יופיע "☁ מחובר לענן – הנתונים נשמרים".
 6. **המשתמש הראשון שנכנס הופך אוטומטית למנהל-על.** מכאן והלאה,
