@@ -290,3 +290,21 @@ create policy "permissions read" on role_permissions for select to authenticated
 drop policy if exists "permissions manage" on role_permissions;
 create policy "permissions manage" on role_permissions for all to authenticated
   using (crm_role() = 'super_admin') with check (crm_role() = 'super_admin');
+
+-- ============================================================
+-- הרשאות גישה לטבלאות (למקרה ש-"Automatically expose new tables"
+-- כבוי בפרויקט – כך מומלץ). רק משתמש מחובר מקבל גישה, ורק דרך
+-- חוקי האבטחה שלמעלה. מבקר אנונימי לא מקבל כלום.
+-- ============================================================
+do $$
+declare t text;
+begin
+  foreach t in array array['subcontractors','expense_categories','leads','clients','tasks','payments','expenses','documents','team_members','role_permissions']
+  loop
+    execute format('revoke all on %I from anon', t);
+    execute format('grant select, insert, update, delete on %I to authenticated', t);
+  end loop;
+end $$;
+
+grant usage on schema public to authenticated;
+grant execute on function crm_role(), crm_sub_id(), crm_can(text), crm_login() to authenticated;
