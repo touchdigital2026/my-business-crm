@@ -1,0 +1,52 @@
+# ============================================================
+# בדיקה אוטומטית בכל עדכון קוד.
+# אם משהו נשבר – GitHub מסמן ❌ והעדכון לא מגיע למערכת.
+# ============================================================
+name: בדיקות
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  app:
+    name: בדיקות האפליקציה ובנייה
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: בדיקות אוטומטיות
+        run: npm test
+      - name: בניית המערכת
+        run: npm run build
+
+  database:
+    name: בדיקות אבטחה של מסד הנתונים
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: יצירת הטבלאות ונתוני הדמו (פעמיים – לוודא שבטוח להריץ שוב)
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/supabase-stub.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/schema.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/schema.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/seed.sql
+      - name: בדיקות הרשאות ואבטחה
+        run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/security.sql

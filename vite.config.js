@@ -7,4 +7,9 @@ export default defineConfig({
     port: 3000,
     open: true,
   },
+  /* בדיקות אוטומטיות: npm test */
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.test.{js,jsx}'],
+  },
 })

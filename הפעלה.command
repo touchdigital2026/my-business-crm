@@ -12,7 +12,9 @@ echo "   CRM - מערכת ניהול לקוחות"
 echo "======================================"
 echo ""
 echo "[1/3] מושך את הגרסה החדשה מהשרת..."
-git pull origin claude/crm-login-screen-4g0sia || echo "(אזהרה: המשיכה נכשלה - ממשיך עם הגרסה הקיימת)"
+# npm install לפעמים משנה את package-lock.json במחשב - מחזירים אותו כדי שהמשיכה לא תיתקע
+git checkout -- package-lock.json 2>/dev/null
+git pull --ff-only origin claude/crm-login-screen-4g0sia || echo "(אזהרה: המשיכה נכשלה - ממשיך עם הגרסה הקיימת)"
 echo ""
 echo "[2/3] בודק התקנות..."
 npm install --no-audit --no-fund

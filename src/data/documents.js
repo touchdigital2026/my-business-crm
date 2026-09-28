@@ -71,11 +71,11 @@ export function buildDocuments(clients) {
     { id: 'D-legal-license', name: 'רישיון עסק.pdf', kind: 'PDF', sizeLabel: '310KB', folderId: 'legal', tags: ['משפטי', 'רישיון'], months: 5, day: 4, visibility: 'מנהלי-על' },
     { id: 'D-legal-insurance', name: 'פוליסת ביטוח אחריות מקצועית.pdf', kind: 'PDF', sizeLabel: '520KB', folderId: 'legal', tags: ['משפטי', 'ביטוח'], months: 3, day: 16, visibility: 'מנהלי-על' },
   ]
-  for (const doc of general) {
+  for (const { months, day, ...doc } of general) {
     docs.push({
       ...doc,
       clientId: null,
-      uploadedAt: monthsAgoDate(doc.months, doc.day),
+      uploadedAt: monthsAgoDate(months, day),
       uploadedBy: admin,
       versions: [],
     })

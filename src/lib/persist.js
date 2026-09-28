@@ -126,6 +126,9 @@ const from = {
   permissions: (r) => ({ role: r.role, modules: r.modules || [] }),
 }
 
+/* חשוף לבדיקות: כל רשומה חייבת לעבור הלוך-חזור בלי לאבד שדות */
+export const mappers = { to, from }
+
 /* שמירה ברקע – לא חוסמת את הממשק */
 function save(table, mapper, record, label) {
   if (!isCloud) return
